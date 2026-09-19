@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>클래식 지뢰찾기 (Minesweeper)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&family=Noto+Sans+KR:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        .digital-font {
+            font-family: 'VT323', monospace;
+        }
+
+        /* 셀 및 보드 그리드 스타일 */
+        .cell {
+            aspect-ratio: 1 / 1;
+            transition: all 0.05s ease-in-out;
+        }
+
+        .cell-unrevealed {
+            background: linear-gradient(135deg, #f0f0f0 0%, #d4d4d8 100%);
+            box-shadow: inset 2px 2px 0px #ffffff, inset -2px -2px 0px #a1a1aa;
+        }
+
+        .cell-unrevealed:hover {
+            background: linear-gradient(135deg, #ffffff 0%, #e4e4e7 100%);
+        }
+
+        .cell-revealed {
+            background-color: #e4e4e7;
+            box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 숫자별 색상 지정 */
+        .num-1 { color: #2563eb; font-weight: 800; }
+        .num-2 { color: #16a34a; font-weight: 800; }
+        .num-3 { color: #dc2626; font-weight: 800; }
+        .num-4 { color: #7c3aed; font-weight: 800; }
+        .num-5 { color: #991b1b; font-weight: 800; }
+        .num-6 { color: #0891b2; font-weight: 800; }
+        .num-7 { color: #1e293b; font-weight: 800; }
+        .num-8 { color: #475569; font-weight: 800; }
+
+        /* 애니메이션 효과 */
+        @keyframes pop {
+            0% { transform: scale(0.8); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .animate-pop {
+            animation: pop 0.15s ease-out forwards;
+        }
+
+        @keyframes explode {
+            0% { transform: scale(1); background-color: #ef4444; }
+            50% { transform: scale(1.2); background-color: #dc2626; }
+            100% { transform: scale(1); background-color: #b91c1c; }
+        }
+
+        .animate-explode {
+            animation: explode 0.3s ease-out forwards;
+        }
+
+        /* 스크롤바 맞춤 설정 */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #a1a1aa;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #71717a;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col items-center justify-between p-2 sm:p-4">
+
+    <!-- 메인 컨테이너 -->
+    <div class="w-full max-w-4xl flex flex-col items-center my-auto">
+        <!-- 타이틀 및 컨트롤 상단 바 -->
+        <header class="w-full text-center mb-3 sm:mb-4">
+            <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight text-amber-400 drop-shadow-md flex items-center justify-center gap-2">
+                💣 지뢰찾기 <span class="text-xs sm:text-sm bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded border border-amber-500/40 font-normal">Retro Edition</span>
+            </h1>
+        </header>
+
+        <!-- 난이도 선택 버튼 및 깃발 모드 토글 -->
+        <div class="w-full max-w-md bg-slate-800 p-2 sm:p-3 rounded-xl shadow-lg border border-slate-700 mb-3 flex flex-wrap gap-2 justify-between items-center">
+            <div class="flex gap-1 sm:gap-2 justify-center flex-1">
+                <button onclick="setDifficulty('easy')" id="btn-easy" class="px-2.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-indigo-600 text-white shadow hover:bg-indigo-500 transition">초급</button>
+                <button onclick="setDifficulty('medium')" id="btn-medium" class="px-2.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition">중급</button>
+                <button onclick="setDifficulty('hard')" id="btn-hard" class="px-2.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition">상급</button>
+                <button onclick="openCustomModal()" id="btn-custom" class="px-2.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition">사용자 지정</button>
+            </div>
+        </div>
+
+        <!-- 모바일용 터치 모드 토글 및 최고기록 확인 -->
+        <div class="w-full max-w-md flex justify-between items-center px-1 mb-2">
+            <button id="flag-mode-btn" onclick="toggleFlagMode()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-xs sm:text-sm font-medium hover:bg-slate-700 transition">
+                <span id="flag-mode-icon">🚩</span>
+                <span>모드: <strong id="flag-mode-text" class="text-indigo-400">열기</strong></span>
+            </button>
+            <button onclick="openScoresModal()" class="flex items-center gap-1 text-xs sm:text-sm text-slate-400 hover:text-amber-300 transition">
+                🏆 최고 기록
+            </button>
+        </div>
+
+        <!-- 게임판 프레임 -->
+        <div id="game-container" class="bg-slate-800 p-3 sm:p-4 rounded-2xl shadow-2xl border-2 border-slate-700 flex flex-col items-center max-w-full">
+            <!-- 상태 표시 바 (남은 지뢰, 얼굴 버튼, 타이머) -->
+            <div class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-2.5 mb-3 flex justify-between items-center">
+                <!-- 남은 지뢰 카운터 -->
+                <div class="flex flex-col items-start min-w-[70px]">
+                    <span class="text-[10px] text-slate-400 font-bold tracking-wider">MINES</span>
+                    <div id="mine-counter" class="digital-font text-2xl sm:text-3xl text-red-500 font-bold bg-black/60 px-2 rounded border border-red-900/50 leading-none">
+                        010
+                    </div>
+                </div>
+
+                <!-- 얼굴 상태/리셋 버튼 -->
+                <button id="face-btn" onclick="initGame()" class="w-10 h-10 sm:w-12 sm:h-12 text-2xl sm:text-3xl bg-slate-800 hover:bg-slate-700 border-2 border-slate-600 rounded-xl flex items-center justify-center transition transform active:scale-95 shadow-inner">
+                    😊
+                </button>
+
+                <!-- 경과 시간 타이머 -->
+                <div class="flex flex-col items-end min-w-[70px]">
+                    <span class="text-[10px] text-slate-400 font-bold tracking-wider">TIME</span>
+                    <div id="timer" class="digital-font text-2xl sm:text-3xl text-red-500 font-bold bg-black/60 px-2 rounded border border-red-900/50 leading-none">
+                        000
+                    </div>
+                </div>
+            </div>
+
+            <!-- 게임 셀 그리드 영역 -->
+            <div id="board-wrapper" class="overflow-auto max-w-full max-h-[60vh] custom-scrollbar p-1 rounded-lg border border-slate-700/50 bg-slate-950">
+                <div id="board" class="grid gap-1 bg-slate-950 p-1 rounded"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 하단 크레딧 -->
+    <footer class="mt-4 text-xs text-slate-500 text-center">
+        지뢰찾기 HTML5 • 좌클릭: 열기, 우클릭/긴누르기: 깃발
+    </footer>
+
+    <!-- 사용자 지정 난이도 모달 -->
+    <div id="custom-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 max-w-xs w-full shadow-2xl">
+            <h3 class="text-lg font-bold text-amber-400 mb-4 flex items-center gap-2">⚙️ 사용자 지정 설정</h3>
+            <div class="space-y-3 text-sm">
+                <div>
+                    <label class="block text-slate-300 text-xs mb-1">가로 크기 (9 ~ 30)</label>
+                    <input type="number" id="custom-width" min="9" max="30" value="10" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-slate-300 text-xs mb-1">세로 크기 (9 ~ 24)</label>
+                    <input type="number" id="custom-height" min="9" max="24" value="10" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-slate-300 text-xs mb-1">지뢰 개수 (1 ~ 최대)</label>
+                    <input type="number" id="custom-mines" min="1" max="300" value="15" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-white focus:outline-none focus:border-indigo-500">
+                </div>
+            </div>
+            <div class="flex gap-2 mt-5">
+                <button onclick="closeCustomModal()" class="flex-1 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-semibold">취소</button>
+                <button onclick="applyCustomSettings()" class="flex-1 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-xs font-semibold text-white">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 최고 기록 모달 -->
+    <div id="scores-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 max-w-xs w-full shadow-2xl">
+            <h3 class="text-lg font-bold text-amber-400 mb-3 flex items-center gap-2">🏆 최고 기록 (최단 시간)</h3>
+            <div class="space-y-2 text-sm my-4">
+                <div class="flex justify-between items-center p-2 rounded bg-slate-900/50">
+                    <span class="text-slate-400">🌱 초급</span>
+                    <span id="score-easy" class="font-bold text-amber-300 digital-font text-xl">-</span>
+                </div>
+                <div class="flex justify-between items-center p-2 rounded bg-slate-900/50">
+                    <span class="text-slate-400">🌿 중급</span>
+                    <span id="score-medium" class="font-bold text-amber-300 digital-font text-xl">-</span>
+                </div>
+                <div class="flex justify-between items-center p-2 rounded bg-slate-900/50">
+                    <span class="text-slate-400">🔥 상급</span>
+                    <span id="score-hard" class="font-bold text-amber-300 digital-font text-xl">-</span>
+                </div>
+            </div>
+            <button onclick="closeScoresModal()" class="w-full py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-semibold">닫기</button>
+        </div>
+    </div>
+
+    <script>
+        // Web Audio API 기반 효과음 생성기 (외부 소스 의존 없음)
+        class SoundEffects {
+            constructor() {
+                this.ctx = null;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            playClick() {
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(200, this.ctx.currentTime + 0.05);
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.05);
+            }
+
+            playFlag() {
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.08);
+            }
+
+            playExplosion() {
+                if (!this.ctx) return;
+                // 노이즈 버퍼 생성으로 폭발음 연출
+                const bufferSize = this.ctx.sampleRate * 0.4;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(800, this.ctx.currentTime);
+                filter.frequency.linearRampToValueAtTime(50, this.ctx.currentTime + 0.4);
+
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                noise.start();
+            }
+
+            playWin() {
+                if (!this.ctx) return;
+                const notes = [440, 554.37, 659.25, 880]; // A4, C#5, E5, A5 멜로디
+                notes.forEach((freq, index) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime + index * 0.1);
+                    gain.gain.setValueAtTime(0.2, this.ctx.currentTime + index * 0.1);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + index * 0.1 + 0.25);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(this.ctx.currentTime + index * 0.1);
+                    osc.stop(this.ctx.currentTime + index * 0.1 + 0.25);
+                });
+            }
+        }
+
+        const sound = new SoundEffects();
+
+        // 게임 환경 설정
+        const DIFFICULTIES = {
+            easy: { width: 9, height: 9, mines: 10 },
+            medium: { width: 16, height: 16, mines: 40 },
+            hard: { width: 30, height: 16, mines: 99 }
+        };
+
+        let currentDifficulty = 'easy';
+        let config = { ...DIFFICULTIES.easy };
+
+        // 게임 상태 상태 변수
+        let board = [];
+        let isFirstClick = true;
+        let isGameOver = false;
+        let isGameWon = false;
+        let remainingMines = 0;
+        let revealedCount = 0;
+        let timer = 0;
+        let timerInterval = null;
+        let flagMode = false; // 터치 기기용 깃발 배치 모드
+
+        // DOM 요소
+        const boardEl = document.getElementById('board');
+        const mineCounterEl = document.getElementById('mine-counter');
+        const timerEl = document.getElementById('timer');
+        const faceBtn = document.getElementById('face-btn');
+
+        // 게임 초기화
+        function initGame() {
+            // 타이머 초기화
+            clearInterval(timerInterval);
+            timerInterval = null;
+            timer = 0;
+            timerEl.textContent = '000';
+
+            isFirstClick = true;
+            isGameOver = false;
+            isGameWon = false;
+            revealedCount = 0;
+            remainingMines = config.mines;
+
+            faceBtn.textContent = '😊';
+            updateMineCounter();
+
+            // 데이터 보드 구조 생성
+            board = Array(config.height).fill(null).map(() => 
+                Array(config.width).fill(null).map(() => ({
+                    isMine: false,
+                    isRevealed: false,
+                    isFlagged: false,
+                    adjacentMines: 0
+                }))
+            );
+
+            renderBoard();
+        }
+
+        // 지뢰 배치 (첫 번째 클릭된 셀 및 인접 8개 셀 안전 보장)
+        function placeMines(safeR, safeC) {
+            let placed = 0;
+            while (placed < config.mines) {
+                const r = Math.floor(Math.random() * config.height);
+                const c = Math.floor(Math.random() * config.width);
+
+                // 안전구역 (첫 클릭 위치와 인접 8개 구역) 제외
+                const isSafeZone = Math.abs(r - safeR) <= 1 && Math.abs(c - safeC) <= 1;
+
+                if (!board[r][c].isMine && !isSafeZone) {
+                    board[r][c].isMine = true;
+                    placed++;
+                }
+            }
+
+            // 인접 지뢰 수 계산
+            for (let r = 0; r < config.height; r++) {
+                for (let c = 0; c < config.width; c++) {
+                    if (!board[r][c].isMine) {
+                        let count = 0;
+                        for (let dr = -1; dr <= 1; dr++) {
+                            for (let dc = -1; dc <= 1; dc++) {
+                                const nr = r + dr;
+                                const nc = c + dc;
+                                if (nr >= 0 && nr < config.height && nc >= 0 && nc < config.width) {
+                                    if (board[nr][nc].isMine) count++;
+                                }
+                            }
+                        }
+                        board[r][c].adjacentMines = count;
+                    }
+                }
+            }
+        }
+
+        // UI 보드 레이아웃 그리기
+        function renderBoard() {
+            boardEl.innerHTML = '';
+            boardEl.style.gridTemplateColumns = `repeat(${config.width}, minmax(0, 1fr))`;
+
+            // 셀 크기 조절 (상급일수록 작은 셀 크기 적용)
+            let cellSizeClass = 'w-7 h-7 text-sm sm:w-9 sm:h-9 sm:text-base';
+            if (config.width > 20) {
+                cellSizeClass = 'w-6 h-6 text-xs sm:w-7 sm:h-7 sm:text-sm';
+            } else if (config.width > 12) {
+                cellSizeClass = 'w-6 h-6 text-xs sm:w-8 sm:h-8 sm:text-sm';
+            }
+
+            for (let r = 0; r < config.height; r++) {
+                for (let c = 0; c < config.width; c++) {
+                    const cellBtn = document.createElement('button');
+                    cellBtn.dataset.row = r;
+                    cellBtn.dataset.col = c;
+                    cellBtn.className = `cell ${cellSizeClass} rounded font-bold flex items-center justify-center select-none cell-unrevealed`;
+
+                    // 모바일 길게 누르기(Long Press) 처리용
+                    let touchTimer = null;
+
+                    cellBtn.addEventListener('mousedown', (e) => {
+                        sound.init();
+                        if (e.button === 0 && !flagMode && !isGameOver && !board[r][c].isRevealed) {
+                            faceBtn.textContent = '😮';
+                        }
+                    });
+
+                    cellBtn.addEventListener('mouseup', () => {
+                        if (!isGameOver && !isGameWon) faceBtn.textContent = '😊';
+                    });
+
+                    cellBtn.addEventListener('click', (e) => {
+                        sound.init();
+                        if (isGameOver || isGameWon) return;
+
+                        if (flagMode) {
+                            handleRightClick(r, c);
+                        } else {
+                            handleLeftClick(r, c);
+                        }
+                    });
+
+                    // 우클릭 깃발 토글
+                    cellBtn.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        sound.init();
+                        if (isGameOver || isGameWon) return;
+                        handleRightClick(r, c);
+                    });
+
+                    // 터치 이벤트 지원 (길게 터치시 깃발)
+                    cellBtn.addEventListener('touchstart', (e) => {
+                        sound.init();
+                        if (isGameOver || isGameWon) return;
+                        touchTimer = setTimeout(() => {
+                            handleRightClick(r, c);
+                            touchTimer = null;
+                        }, 400);
+                    }, { passive: true });
+
+                    cellBtn.addEventListener('touchend', () => {
+                        if (touchTimer) {
+                            clearTimeout(touchTimer);
+                            touchTimer = null;
+                        }
+                    });
+
+                    boardEl.appendChild(cellBtn);
+                }
+            }
+        }
+
+        // 왼쪽 클릭 (셀 오픈)
+        function handleLeftClick(r, c) {
+            const cell = board[r][c];
+
+            if (cell.isFlagged || cell.isRevealed) return;
+
+            // 첫번째 클릭 처리 (안전지대 보장 및 타이머 시작)
+            if (isFirstClick) {
+                isFirstClick = false;
+                placeMines(r, c);
+                startTimer();
+            }
+
+            // 지뢰 밟음 -> 패배
+            if (cell.isMine) {
+                triggerGameOver(r, c);
+                return;
+            }
+
+            sound.playClick();
+            revealCell(r, c);
+
+            // 승리 체크
+            checkWinCondition();
+        }
+
+        // 재귀적 셀 오픈 (빈 공간 재귀적 탐색 - Flood Fill)
+        function revealCell(r, c) {
+            const cell = board[r][c];
+            if (cell.isRevealed || cell.isFlagged) return;
+
+            cell.isRevealed = true;
+            revealedCount++;
+
+            const el = getCellElement(r, c);
+            el.classList.remove('cell-unrevealed');
+            el.classList.add('cell-revealed', 'animate-pop');
+
+            if (cell.adjacentMines > 0) {
+                el.textContent = cell.adjacentMines;
+                el.classList.add(`num-${cell.adjacentMines}`);
+            } else {
+                // 인접 지뢰가 0개인 경우 주변 8칸 자동 오픈
+                for (let dr = -1; dr <= 1; dr++) {
+                    for (let dc = -1; dc <= 1; dc++) {
+                        const nr = r + dr;
+                        const nc = c + dc;
+                        if (nr >= 0 && nr < config.height && nc >= 0 && nc < config.width) {
+                            if (!board[nr][nc].isRevealed) {
+                                revealCell(nr, nc);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 우클릭 (깃발 토글)
+        function handleRightClick(r, c) {
+            const cell = board[r][c];
+            if (cell.isRevealed) return;
+
+            cell.isFlagged = !cell.isFlagged;
+            const el = getCellElement(r, c);
+
+            if (cell.isFlagged) {
+                remainingMines--;
+                el.textContent = '🚩';
+                sound.playFlag();
+            } else {
+                remainingMines++;
+                el.textContent = '';
+            }
+
+            updateMineCounter();
+        }
+
+        // 게임 오버 처리
+        function triggerGameOver(hitR, hitC) {
+            isGameOver = true;
+            clearInterval(timerInterval);
+            faceBtn.textContent = '😵';
+            sound.playExplosion();
+
+            // 전체 지뢰 공개 및 잘못된 깃발 표시
+            for (let r = 0; r < config.height; r++) {
+                for (let c = 0; c < config.width; c++) {
+                    const cell = board[r][c];
+                    const el = getCellElement(r, c);
+
+                    if (r === hitR && c === hitC) {
+                        el.textContent = '💥';
+                        el.classList.remove('cell-unrevealed');
+                        el.classList.add('bg-red-600', 'animate-explode');
+                    } else if (cell.isMine && !cell.isFlagged) {
+                        el.textContent = '💣';
+                        el.classList.remove('cell-unrevealed');
+                        el.classList.add('cell-revealed');
+                    } else if (!cell.isMine && cell.isFlagged) {
+                        el.textContent = '❌';
+                        el.classList.remove('cell-unrevealed');
+                        el.classList.add('bg-red-100');
+                    }
+                }
+            }
+        }
+
+        // 승리 조건 체크
+        function checkWinCondition() {
+            const totalSafeCells = (config.width * config.height) - config.mines;
+            if (revealedCount === totalSafeCells) {
+                isGameWon = true;
+                clearInterval(timerInterval);
+                faceBtn.textContent = '😎';
+                sound.playWin();
+
+                // 남아있는 지뢰에 자동 깃발 표시
+                for (let r = 0; r < config.height; r++) {
+                    for (let c = 0; c < config.width; c++) {
+                        if (board[r][c].isMine) {
+                            board[r][c].isFlagged = true;
+                            const el = getCellElement(r, c);
+                            el.textContent = '🚩';
+                        }
+                    }
+                }
+                remainingMines = 0;
+                updateMineCounter();
+
+                // 최고 기록 업데이트 저장
+                saveHighScore(currentDifficulty, timer);
+            }
+        }
+
+        // 헬퍼: 셀 DOM 엘리먼트 가져오기
+        function getCellElement(r, c) {
+            return boardEl.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+        }
+
+        // 지뢰 표시기 업데이트
+        function updateMineCounter() {
+            const formatted = String(Math.max(-99, remainingMines)).padStart(3, '0');
+            mineCounterEl.textContent = formatted;
+        }
+
+        // 타이머 동작
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timer++;
+                if (timer > 999) timer = 999;
+                timerEl.textContent = String(timer).padStart(3, '0');
+            }, 1000);
+        }
+
+        // 난이도 설정 변경
+        function setDifficulty(diff) {
+            currentDifficulty = diff;
+            config = { ...DIFFICULTIES[diff] };
+
+            // 난이도 버튼 UI 업데이트
+            ['easy', 'medium', 'hard', 'custom'].forEach(d => {
+                const btn = document.getElementById(`btn-${d}`);
+                if (d === diff) {
+                    btn.className = "px-2.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-indigo-600 text-white shadow hover:bg-indigo-500 transition";
+                } else {
+                    btn.className = "px-2.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition";
+                }
+            });
+
+            initGame();
+        }
+
+        // 터치 기기용 깃발 모드 토글
+        function toggleFlagMode() {
+            flagMode = !flagMode;
+            const btn = document.getElementById('flag-mode-btn');
+            const text = document.getElementById('flag-mode-text');
+            const icon = document.getElementById('flag-mode-icon');
+
+            if (flagMode) {
+                btn.classList.replace('bg-slate-800', 'bg-indigo-900/60');
+                btn.classList.replace('border-slate-700', 'border-indigo-500');
+                text.textContent = '깃발';
+                text.className = 'text-amber-400 font-bold';
+                icon.textContent = '🚩';
+            } else {
+                btn.classList.replace('bg-indigo-900/60', 'bg-slate-800');
+                btn.classList.replace('border-indigo-500', 'border-slate-700');
+                text.textContent = '열기';
+                text.className = 'text-indigo-400 font-bold';
+                icon.textContent = '🔍';
+            }
+        }
+
+        // 사용자 지정 난이도 모달 로직
+        function openCustomModal() {
+            document.getElementById('custom-modal').classList.remove('hidden');
+            document.getElementById('custom-modal').classList.add('flex');
+        }
+
+        function closeCustomModal() {
+            document.getElementById('custom-modal').classList.add('hidden');
+            document.getElementById('custom-modal').classList.remove('flex');
+        }
+
+        function applyCustomSettings() {
+            const w = parseInt(document.getElementById('custom-width').value) || 10;
+            const h = parseInt(document.getElementById('custom-height').value) || 10;
+            let m = parseInt(document.getElementById('custom-mines').value) || 10;
+
+            const clampedW = Math.min(Math.max(w, 9), 30);
+            const clampedH = Math.min(Math.max(h, 9), 24);
+            const maxMines = Math.floor((clampedW * clampedH) * 0.8); // 최대 80% 밀도 제한
+            const clampedMines = Math.min(Math.max(m, 1), maxMines);
+
+            config = { width: clampedW, height: clampedH, mines: clampedMines };
+            currentDifficulty = 'custom';
+
+            ['easy', 'medium', 'hard'].forEach(d => {
+                document.getElementById(`btn-${d}`).className = "px-2.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition";
+            });
+            document.getElementById('btn-custom').className = "px-2.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-indigo-600 text-white shadow hover:bg-indigo-500 transition";
+
+            closeCustomModal();
+            initGame();
+        }
+
+        // 최고 기록 관리 (LocalStorage)
+        function saveHighScore(diff, time) {
+            if (diff === 'custom') return;
+            const key = `minesweeper_best_${diff}`;
+            const currentBest = localStorage.getItem(key);
+
+            if (!currentBest || time < parseInt(currentBest)) {
+                localStorage.setItem(key, time);
+                setTimeout(() => {
+                    alert(`🎉 축하합니다! ${diff === 'easy' ? '초급' : diff === 'medium' ? '중급' : '상급'} 신기록 달성: ${time}초`);
+                }, 100);
+            }
+        }
+
+        function openScoresModal() {
+            ['easy', 'medium', 'hard'].forEach(d => {
+                const best = localStorage.getItem(`minesweeper_best_${d}`);
+                document.getElementById(`score-${d}`).textContent = best ? `${best}초` : '기록 없음';
+            });
+            document.getElementById('scores-modal').classList.remove('hidden');
+            document.getElementById('scores-modal').classList.add('flex');
+        }
+
+        function closeScoresModal() {
+            document.getElementById('scores-modal').classList.add('hidden');
+            document.getElementById('scores-modal').classList.remove('flex');
+        }
+
+        // 페이지 로드시 게임 시작
+        window.onload = () => {
+            initGame();
+        };
+    </script>
+</body>
+</html>

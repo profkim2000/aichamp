@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>오목 vs AI (Gomoku vs AI)</title>
+    <!-- Tailwind CSS for UI structure -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .wood-board {
+            background-color: #e0a96d;
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.15) 0%, rgba(0, 0, 0, 0.15) 100%),
+                repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(139, 69, 19, 0.05) 3px, rgba(139, 69, 19, 0.05) 6px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3), inset 0 0 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .dark-board {
+            background-color: #2a2d34;
+            background-image: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.05) 0%, rgba(0, 0, 0, 0.4) 100%);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .stone-placed {
+            animation: stoneDrop 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes stoneDrop {
+            0% {
+                transform: scale(1.4);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Custom Scrollbar for move history */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.4);
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between items-center p-3 md:p-6">
+
+    <header class="w-full max-w-5xl flex flex-col sm:flex-row justify-between items-center gap-3 mb-4">
+        <div class="flex items-center gap-3">
+            <div class="p-2.5 bg-amber-600/20 text-amber-500 rounded-xl border border-amber-500/30">
+                <i class="fa-solid fa-chess-board text-2xl"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+                    오목 AI 대결 <span class="text-xs px-2 py-0.5 bg-amber-500/20 text-amber-400 rounded-full border border-amber-500/30">Gomoku</span>
+                </h1>
+                <p class="text-xs text-slate-400">강력한 AI에 도전하여 5목을 연속으로 완성하세요!</p>
+            </div>
+        </div>
+
+        <!-- Controls Toolbar -->
+        <div class="flex items-center gap-2 bg-slate-800/80 p-1.5 rounded-xl border border-slate-700/60 backdrop-blur-sm">
+            <select id="difficultySelect" class="bg-slate-700 text-xs font-medium text-slate-200 rounded-lg px-2.5 py-1.5 border border-slate-600 outline-none focus:ring-2 focus:ring-amber-500/50 cursor-pointer transition">
+                <option value="easy">난이도: 쉬움 (Easy)</option>
+                <option value="normal" selected>난이도: 보통 (Normal)</option>
+                <option value="hard">난이도: 어려움 (Hard)</option>
+            </select>
+
+            <button id="themeToggleBtn" title="테마 변경" class="p-2 text-slate-300 hover:text-white bg-slate-700/50 hover:bg-slate-700 rounded-lg transition border border-slate-600/50">
+                <i class="fa-solid fa-palette text-sm"></i>
+            </button>
+
+            <button id="soundToggleBtn" title="소리 켜기/끄기" class="p-2 text-slate-300 hover:text-white bg-slate-700/50 hover:bg-slate-700 rounded-lg transition border border-slate-600/50">
+                <i id="soundIcon" class="fa-solid fa-volume-high text-sm"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="w-full max-w-5xl flex flex-col lg:flex-row gap-6 justify-center items-stretch flex-1">
+
+        <!-- Board Section -->
+        <div class="flex-1 flex flex-col items-center justify-center">
+            <!-- Game Canvas Box -->
+            <div id="boardContainer" class="relative wood-board p-3 md:p-5 rounded-2xl transition-all duration-300 border border-amber-900/30">
+                <canvas id="omokBoard" class="cursor-pointer block rounded-lg"></canvas>
+
+                <!-- Thinking Overlay Indicator -->
+                <div id="aiThinkingOverlay" class="absolute inset-0 bg-black/20 backdrop-blur-[1px] rounded-2xl flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-200">
+                    <div class="bg-slate-900/90 border border-amber-500/40 text-amber-300 px-4 py-2 rounded-xl flex items-center gap-3 shadow-2xl">
+                        <i class="fa-solid fa-circle-notch fa-spin text-lg"></i>
+                        <span class="text-sm font-medium">AI 연산 중...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Sidebar -->
+        <div class="w-full lg:w-80 flex flex-col gap-4 justify-between">
+            
+            <!-- Status Card -->
+            <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 backdrop-blur-sm flex flex-col gap-3 shadow-lg">
+                <h2 class="text-xs uppercase tracking-wider text-slate-400 font-semibold flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle-info text-amber-500"></i> 게임 상태
+                </h2>
+
+                <div class="flex items-center justify-between bg-slate-900/70 p-3 rounded-xl border border-slate-700/50">
+                    <div id="playerIndicator" class="flex items-center gap-2.5 transition-all">
+                        <div class="w-5 h-5 rounded-full bg-slate-900 border-2 border-slate-400 shadow-md"></div>
+                        <div class="flex flex-col">
+                            <span class="text-xs text-slate-400">당신 (흑돌)</span>
+                            <span id="playerWinsCount" class="text-xs font-semibold text-emerald-400">0승</span>
+                        </div>
+                    </div>
+                    <span class="text-slate-600 font-bold text-sm">VS</span>
+                    <div id="aiIndicator" class="flex items-center gap-2.5 transition-all opacity-50">
+                        <div class="flex flex-col items-end">
+                            <span class="text-xs text-slate-400">AI (백돌)</span>
+                            <span id="aiWinsCount" class="text-xs font-semibold text-emerald-400">0승</span>
+                        </div>
+                        <div class="w-5 h-5 rounded-full bg-slate-100 border-2 border-slate-300 shadow-md"></div>
+                    </div>
+                </div>
+
+                <!-- Turn Status Text Box -->
+                <div id="statusTextContainer" class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-center">
+                    <p id="statusText" class="text-sm font-medium text-amber-300">당신의 차례입니다 (흑돌)</p>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="grid grid-cols-2 gap-2">
+                <button id="undoBtn" class="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 py-3 rounded-xl font-medium border border-slate-700/80 transition shadow-md disabled:opacity-40 disabled:cursor-not-allowed">
+                    <i class="fa-solid fa-rotate-left text-amber-400"></i> 무르기
+                </button>
+                <button id="restartBtn" class="flex items-center justify-center gap-2 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 active:scale-95 text-white py-3 rounded-xl font-medium border border-amber-500/30 transition shadow-lg shadow-amber-900/30">
+                    <i class="fa-solid fa-arrows-rotate"></i> 새 게임
+                </button>
+            </div>
+
+            <!-- Move History Log -->
+            <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 backdrop-blur-sm flex-1 flex flex-col max-h-56 lg:max-h-64 shadow-lg">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-xs uppercase tracking-wider text-slate-400 font-semibold flex items-center gap-1.5">
+                        <i class="fa-solid fa-list-ol text-amber-500"></i> 착수 기록
+                    </h2>
+                    <span id="moveCountBadge" class="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">0 수</span>
+                </div>
+                
+                <div id="moveLog" class="flex-1 overflow-y-auto space-y-1 pr-1 text-xs font-mono">
+                    <p class="text-slate-500 text-center py-6 italic">게임이 시작되었습니다.</p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-4 text-center text-xs text-slate-500">
+        오목 (Gomoku) Engine v2.0 • Canvas & Minimax Alpha-Beta Pruning
+    </footer>
+
+    <div id="gameModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 p-4">
+        <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-sm w-full text-center shadow-2xl transform scale-95 transition-transform duration-300" id="modalContent">
+            <div id="modalIconContainer" class="w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-4 bg-amber-500/20 text-amber-400 border border-amber-500/40">
+                <i id="modalIcon" class="fa-solid fa-trophy text-3xl"></i>
+            </div>
+            <h3 id="modalTitle" class="text-xl font-bold text-white mb-2">승리하였습니다!</h3>
+            <p id="modalMessage" class="text-sm text-slate-300 mb-6">뛰어난 수읽기로 AI를 제압했습니다.</p>
+            <div class="flex gap-2 justify-center">
+                <button id="modalRestartBtn" class="w-full py-3 bg-amber-600 hover:bg-amber-500 text-white font-medium rounded-xl shadow-lg transition active:scale-95">
+                    다시 하기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sound FX Manager using Web Audio API (No external assets required)
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) {
+                        this.ctx = new AudioContext();
+                    }
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playStoneSound(isBlack = true) {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'triangle';
+                // Subtle pitch difference between Black and White stone sound
+                osc.frequency.setValueAtTime(isBlack ? 380 : 440, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + 0.08);
+
+                gain.gain.setValueAtTime(0.6, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.08);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.08);
+            }
+
+            playWinSound() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+
+                    const startTime = this.ctx.currentTime + idx * 0.1;
+                    gain.gain.setValueAtTime(0.3, startTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.3);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start(startTime);
+                    osc.stop(startTime + 0.3);
+                });
+            }
+
+            playLoseSound() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const notes = [400, 350, 300, 250];
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.value = freq;
+
+                    const startTime = this.ctx.currentTime + idx * 0.12;
+                    gain.gain.setValueAtTime(0.2, startTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.2);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start(startTime);
+                    osc.stop(startTime + 0.2);
+                });
+            }
+        }
+
+        const soundEngine = new SoundEngine();
+
+        const BOARD_SIZE = 15;
+        const EMPTY = 0;
+        const BLACK = 1; // Player
+        const WHITE = 2; // AI
+
+        class GomokuGame {
+            constructor() {
+                this.board = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(EMPTY));
+                this.history = []; // [{r, c, color}]
+                this.currentPlayer = BLACK;
+                this.gameOver = false;
+                this.winner = null;
+                this.winningLine = [];
+                this.difficulty = 'normal'; // easy, normal, hard
+                this.theme = 'wood'; // wood, dark
+                this.playerScore = 0;
+                this.aiScore = 0;
+
+                // Canvas setup
+                this.canvas = document.getElementById('omokBoard');
+                this.ctx = this.canvas.getContext('2d');
+                this.cellSize = 0;
+                this.padding = 0;
+
+                this.initDOM();
+                this.resizeCanvas();
+                window.addEventListener('resize', () => this.resizeCanvas());
+            }
+
+            initDOM() {
+                this.difficultySelect = document.getElementById('difficultySelect');
+                this.statusText = document.getElementById('statusText');
+                this.statusContainer = document.getElementById('statusTextContainer');
+                this.moveLog = document.getElementById('moveLog');
+                this.moveCountBadge = document.getElementById('moveCountBadge');
+                this.undoBtn = document.getElementById('undoBtn');
+                this.restartBtn = document.getElementById('restartBtn');
+                this.aiThinkingOverlay = document.getElementById('aiThinkingOverlay');
+                this.playerIndicator = document.getElementById('playerIndicator');
+                this.aiIndicator = document.getElementById('aiIndicator');
+
+                // Event Listeners
+                this.canvas.addEventListener('click', (e) => this.handleCanvasClick(e));
+                this.undoBtn.addEventListener('click', () => this.undoMove());
+                this.restartBtn.addEventListener('click', () => this.resetGame());
+                
+                this.difficultySelect.addEventListener('change', (e) => {
+                    this.difficulty = e.target.value;
+                });
+
+                document.getElementById('themeToggleBtn').addEventListener('click', () => {
+                    this.theme = this.theme === 'wood' ? 'dark' : 'wood';
+                    const container = document.getElementById('boardContainer');
+                    if (this.theme === 'dark') {
+                        container.classList.remove('wood-board');
+                        container.classList.add('dark-board');
+                    } else {
+                        container.classList.remove('dark-board');
+                        container.classList.add('wood-board');
+                    }
+                    this.drawBoard();
+                });
+
+                const soundToggleBtn = document.getElementById('soundToggleBtn');
+                const soundIcon = document.getElementById('soundIcon');
+                soundToggleBtn.addEventListener('click', () => {
+                    soundEngine.muted = !soundEngine.muted;
+                    if (soundEngine.muted) {
+                        soundIcon.className = 'fa-solid fa-volume-xmark text-sm text-red-400';
+                    } else {
+                        soundIcon.className = 'fa-solid fa-volume-high text-sm text-slate-300';
+                    }
+                });
+
+                // Modal
+                document.getElementById('modalRestartBtn').addEventListener('click', () => {
+                    this.hideModal();
+                    this.resetGame();
+                });
+            }
+
+            resizeCanvas() {
+                const container = document.getElementById('boardContainer');
+                const maxCanvasWidth = Math.min(window.innerWidth - 48, 540);
+                
+                // Keep canvas square
+                this.canvas.width = maxCanvasWidth;
+                this.canvas.height = maxCanvasWidth;
+
+                this.padding = maxCanvasWidth / (BOARD_SIZE + 1);
+                this.cellSize = (maxCanvasWidth - this.padding * 2) / (BOARD_SIZE - 1);
+
+                this.drawBoard();
+            }
+
+            resetGame() {
+                this.board = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(EMPTY));
+                this.history = [];
+                this.currentPlayer = BLACK;
+                this.gameOver = false;
+                this.winner = null;
+                this.winningLine = [];
+                this.updateUI();
+                this.drawBoard();
+            }
+
+            drawBoard() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                const isDark = this.theme === 'dark';
+                const gridColor = isDark ? '#4a5568' : '#7c4a03';
+                const textColor = isDark ? '#a0aec0' : '#8c5305';
+
+                // 1. Draw Grid Lines
+                this.ctx.lineWidth = 1.2;
+                this.ctx.strokeStyle = gridColor;
+
+                for (let i = 0; i < BOARD_SIZE; i++) {
+                    const pos = this.padding + i * this.cellSize;
+
+                    // Vertical Line
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(pos, this.padding);
+                    this.ctx.lineTo(pos, this.canvas.height - this.padding);
+                    this.ctx.stroke();
+
+                    // Horizontal Line
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(this.padding, pos);
+                    this.ctx.lineTo(this.canvas.width - this.padding, pos);
+                    this.ctx.stroke();
+                }
+
+                // Outer border line thicker
+                this.ctx.lineWidth = 2.5;
+                this.ctx.strokeRect(
+                    this.padding, 
+                    this.padding, 
+                    this.canvas.width - this.padding * 2, 
+                    this.canvas.height - this.padding * 2
+                );
+
+                // 2. Star Points (화점)
+                const starPoints = [3, 7, 11];
+                this.ctx.fillStyle = gridColor;
+                for (let r of starPoints) {
+                    for (let c of starPoints) {
+                        const x = this.padding + c * this.cellSize;
+                        const y = this.padding + r * this.cellSize;
+                        this.ctx.beginPath();
+                        this.ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+                        this.ctx.fill();
+                    }
+                }
+
+                // 3. Draw Stones
+                for (let r = 0; r < BOARD_SIZE; r++) {
+                    for (let c = 0; c < BOARD_SIZE; c++) {
+                        if (this.board[r][c] !== EMPTY) {
+                            this.drawStone(r, c, this.board[r][c]);
+                        }
+                    }
+                }
+
+                // 4. Highlight Last Move
+                if (this.history.length > 0) {
+                    const lastMove = this.history[this.history.length - 1];
+                    const x = this.padding + lastMove.c * this.cellSize;
+                    const y = this.padding + lastMove.r * this.cellSize;
+
+                    this.ctx.beginPath();
+                    this.ctx.arc(x, y, this.cellSize * 0.18, 0, Math.PI * 2);
+                    this.ctx.fillStyle = lastMove.color === BLACK ? '#ef4444' : '#3b82f6';
+                    this.ctx.fill();
+                    this.ctx.strokeStyle = '#ffffff';
+                    this.ctx.lineWidth = 1.5;
+                    this.ctx.stroke();
+                }
+
+                // 5. Highlight Winning Line
+                if (this.winningLine.length > 0) {
+                    this.ctx.strokeStyle = '#10b981'; // Green accent
+                    this.ctx.lineWidth = 4;
+                    this.ctx.beginPath();
+                    const startX = this.padding + this.winningLine[0].c * this.cellSize;
+                    const startY = this.padding + this.winningLine[0].r * this.cellSize;
+                    const endX = this.padding + this.winningLine[this.winningLine.length - 1].c * this.cellSize;
+                    const endY = this.padding + this.winningLine[this.winningLine.length - 1].r * this.cellSize;
+                    
+                    this.ctx.moveTo(startX, startY);
+                    this.ctx.lineTo(endX, endY);
+                    this.ctx.stroke();
+                }
+            }
+
+            drawStone(r, c, color) {
+                const x = this.padding + c * this.cellSize;
+                const y = this.padding + r * this.cellSize;
+                const radius = this.cellSize * 0.42;
+
+                this.ctx.save();
+
+                // Drop Shadow
+                this.ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+                this.ctx.shadowBlur = 6;
+                this.ctx.shadowOffsetX = 2;
+                this.ctx.shadowOffsetY = 3;
+
+                // Radial Gradient for 3D sphere look
+                const gradient = this.ctx.createRadialGradient(
+                    x - radius * 0.3, y - radius * 0.3, radius * 0.1,
+                    x, y, radius
+                );
+
+                if (color === BLACK) {
+                    gradient.addColorStop(0, '#555555');
+                    gradient.addColorStop(0.8, '#111111');
+                    gradient.addColorStop(1, '#000000');
+                } else {
+                    gradient.addColorStop(0, '#ffffff');
+                    gradient.addColorStop(0.85, '#e2e8f0');
+                    gradient.addColorStop(1, '#cbd5e1');
+                }
+
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+                this.ctx.fillStyle = gradient;
+                this.ctx.fill();
+
+                this.ctx.restore();
+            }
+
+            handleCanvasClick(e) {
+                if (this.gameOver || this.currentPlayer !== BLACK) return;
+
+                const rect = this.canvas.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const clickY = e.clientY - rect.top;
+
+                // Find closest intersection
+                const c = Math.round((clickX - this.padding) / this.cellSize);
+                const r = Math.round((clickY - this.padding) / this.cellSize);
+
+                if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE) {
+                    if (this.board[r][c] === EMPTY) {
+                        this.makeMove(r, c, BLACK);
+
+                        if (!this.gameOver) {
+                            this.currentPlayer = WHITE;
+                            this.updateUI();
+                            
+                            // Trigger AI Move after short delay for realistic feel
+                            this.setAiThinking(true);
+                            setTimeout(() => {
+                                this.triggerAiMove();
+                                this.setAiThinking(false);
+                            }, 300);
+                        }
+                    }
+                }
+            }
+
+            makeMove(r, c, color) {
+                this.board[r][c] = color;
+                this.history.push({ r, c, color });
+                soundEngine.playStoneSound(color === BLACK);
+
+                const winCheck = this.checkWin(r, c, color);
+                if (winCheck.isWin) {
+                    this.gameOver = true;
+                    this.winner = color;
+                    this.winningLine = winCheck.line;
+                    if (color === BLACK) {
+                        this.playerScore++;
+                        soundEngine.playWinSound();
+                        this.showModal('승리하였습니다! 🎉', '뛰어난 수읽기로 AI를 제압했습니다.', 'trophy');
+                    } else {
+                        this.aiScore++;
+                        soundEngine.playLoseSound();
+                        this.showModal('AI가 승리하였습니다 🤖', '다시 도전하여 AI의 공세를 막아보세요!', 'robot');
+                    }
+                } else if (this.history.length === BOARD_SIZE * BOARD_SIZE) {
+                    this.gameOver = true;
+                    this.winner = null;
+                    this.showModal('무승부입니다! 🤝', '더 이상 둘 수 있는 공간이 없습니다.', 'handshake');
+                }
+
+                this.drawBoard();
+                this.updateUI();
+            }
+
+            undoMove() {
+                if (this.history.length === 0 || this.gameOver) return;
+
+                // If playing against AI, undo twice (AI move + Player move)
+                let movesToUndo = 1;
+                if (this.history.length >= 2 && this.history[this.history.length - 1].color === WHITE) {
+                    movesToUndo = 2;
+                }
+
+                for (let i = 0; i < movesToUndo; i++) {
+                    const last = this.history.pop();
+                    if (last) {
+                        this.board[last.r][last.c] = EMPTY;
+                    }
+                }
+
+                this.currentPlayer = BLACK;
+                this.gameOver = false;
+                this.winner = null;
+                this.winningLine = [];
+                this.drawBoard();
+                this.updateUI();
+            }
+
+            setAiThinking(isThinking) {
+                if (isThinking) {
+                    this.aiThinkingOverlay.classList.remove('opacity-0', 'pointer-events-none');
+                } else {
+                    this.aiThinkingOverlay.classList.add('opacity-0', 'pointer-events-none');
+                }
+            }
+
+            updateUI() {
+                // Update player wins count
+                document.getElementById('playerWinsCount').textContent = `${this.playerScore}승`;
+                document.getElementById('aiWinsCount').textContent = `${this.aiScore}승`;
+
+                // Update Status text
+                if (this.gameOver) {
+                    if (this.winner === BLACK) {
+                        this.statusText.textContent = "🏆 당신의 승리입니다!";
+                        this.statusContainer.className = "p-3 bg-emerald-500/20 border border-emerald-500/40 rounded-xl text-center";
+                    } else if (this.winner === WHITE) {
+                        this.statusText.textContent = "🤖 AI의 승리입니다.";
+                        this.statusContainer.className = "p-3 bg-red-500/20 border border-red-500/40 rounded-xl text-center";
+                    } else {
+                        this.statusText.textContent = "🤝 무승부입니다.";
+                        this.statusContainer.className = "p-3 bg-slate-500/20 border border-slate-500/40 rounded-xl text-center";
+                    }
+                } else {
+                    if (this.currentPlayer === BLACK) {
+                        this.statusText.textContent = "당신의 차례입니다 (흑돌)";
+                        this.statusContainer.className = "p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-center";
+                        this.playerIndicator.classList.remove('opacity-50');
+                        this.aiIndicator.classList.add('opacity-50');
+                    } else {
+                        this.statusText.textContent = "AI가 생각 중입니다... (백돌)";
+                        this.statusContainer.className = "p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl text-center";
+                        this.aiIndicator.classList.remove('opacity-50');
+                        this.playerIndicator.classList.add('opacity-50');
+                    }
+                }
+
+                // Update Undo Button state
+                this.undoBtn.disabled = this.history.length === 0 || this.currentPlayer === WHITE;
+
+                // Update Move Log
+                this.moveCountBadge.textContent = `${this.history.length} 수`;
+                if (this.history.length === 0) {
+                    this.moveLog.innerHTML = `<p class="text-slate-500 text-center py-6 italic">게임이 시작되었습니다.</p>`;
+                } else {
+                    this.moveLog.innerHTML = this.history.map((m, idx) => {
+                        const colName = String.fromCharCode(65 + m.c); // A-O
+                        const rowName = 15 - m.r; // 1-15
+                        const playerTag = m.color === BLACK ? 
+                            `<span class="text-slate-300 font-semibold"><i class="fa-solid fa-circle text-[10px] mr-1 text-slate-400"></i>흑</span>` : 
+                            `<span class="text-blue-300 font-semibold"><i class="fa-regular fa-circle text-[10px] mr-1 text-blue-400"></i>백</span>`;
+                        return `<div class="flex justify-between items-center py-1 px-2 rounded hover:bg-slate-700/50">
+                            <span class="text-slate-400">#${idx + 1}</span>
+                            <div>${playerTag}</div>
+                            <span class="text-slate-200 font-bold">${colName}${rowName}</span>
+                        </div>`;
+                    }).reverse().join('');
+                }
+            }
+
+            checkWin(r, c, color) {
+                const directions = [
+                    [[0, 1], [0, -1]],   // Horizontal
+                    [[1, 0], [-1, 0]],   // Vertical
+                    [[1, 1], [-1, -1]],  // Diagonal \
+                    [[1, -1], [-1, 1]]   // Diagonal /
+                ];
+
+                for (let dir of directions) {
+                    let line = [{ r, c }];
+                    for (let [dr, dc] of dir) {
+                        let nr = r + dr;
+                        let nc = c + dc;
+                        while (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE && this.board[nr][nc] === color) {
+                            line.push({ r: nr, c: nc });
+                            nr += dr;
+                            nc += dc;
+                        }
+                    }
+
+                    if (line.length >= 5) {
+                        // Sort line by coordinates for nice rendering
+                        line.sort((a, b) => a.r !== b.r ? a.r - b.r : a.c - b.c);
+                        return { isWin: true, line };
+                    }
+                }
+
+                return { isWin: false, line: [] };
+            }
+
+            triggerAiMove() {
+                if (this.gameOver) return;
+
+                const bestMove = this.getBestMove();
+                if (bestMove) {
+                    this.makeMove(bestMove.r, bestMove.c, WHITE);
+                    if (!this.gameOver) {
+                        this.currentPlayer = BLACK;
+                        this.updateUI();
+                    }
+                }
+            }
+
+            getBestMove() {
+                // First turn check - if player placed center, put nearby
+                if (this.history.length === 1) {
+                    const first = this.history[0];
+                    const offsets = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
+                    const validOffsets = offsets.filter(([dr, dc]) => {
+                        const nr = first.r + dr, nc = first.c + dc;
+                        return nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE;
+                    });
+                    const chosen = validOffsets[Math.floor(Math.random() * validOffsets.length)];
+                    return { r: first.r + chosen[0], c: first.c + chosen[1] };
+                }
+
+                // Difficulty depth scaling
+                let depth = 2;
+                if (this.difficulty === 'easy') depth = 1;
+                if (this.difficulty === 'normal') depth = 2;
+                if (this.difficulty === 'hard') depth = 3;
+
+                // Candidate moves (adjacent to existing stones within range 2)
+                const candidates = this.getCandidateMoves();
+
+                if (candidates.length === 0) {
+                    return { r: Math.floor(BOARD_SIZE / 2), c: Math.floor(BOARD_SIZE / 2) };
+                }
+
+                // Quick Win / Immediate Block Check
+                for (let move of candidates) {
+                    // Check if AI can win immediately
+                    this.board[move.r][move.c] = WHITE;
+                    if (this.checkWin(move.r, move.c, WHITE).isWin) {
+                        this.board[move.r][move.c] = EMPTY;
+                        return move;
+                    }
+                    this.board[move.r][move.c] = EMPTY;
+                }
+
+                for (let move of candidates) {
+                    // Check if Player will win on next turn (Immediate Block)
+                    this.board[move.r][move.c] = BLACK;
+                    if (this.checkWin(move.r, move.c, BLACK).isWin) {
+                        this.board[move.r][move.c] = EMPTY;
+                        return move;
+                    }
+                    this.board[move.r][move.c] = EMPTY;
+                }
+
+                // Minimax with Alpha-Beta Pruning
+                let bestScore = -Infinity;
+                let bestMoves = [];
+
+                for (let move of candidates) {
+                    this.board[move.r][move.c] = WHITE;
+                    let score = this.minimax(depth - 1, false, -Infinity, Infinity);
+                    this.board[move.r][move.c] = EMPTY;
+
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestMoves = [move];
+                    } else if (score === bestScore) {
+                        bestMoves.push(move);
+                    }
+                }
+
+                return bestMoves[Math.floor(Math.random() * bestMoves.length)];
+            }
+
+            getCandidateMoves() {
+                const candidateMap = new Array(BOARD_SIZE).fill(0).map(() => new Array(BOARD_SIZE).fill(false));
+                const candidates = [];
+
+                for (let r = 0; r < BOARD_SIZE; r++) {
+                    for (let c = 0; c < BOARD_SIZE; c++) {
+                        if (this.board[r][c] !== EMPTY) {
+                            // Search 2-cell radius around placed stones
+                            for (let dr = -2; dr <= 2; dr++) {
+                                for (let dc = -2; dc <= 2; dc++) {
+                                    const nr = r + dr;
+                                    const nc = c + dc;
+                                    if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE && this.board[nr][nc] === EMPTY) {
+                                        if (!candidateMap[nr][nc]) {
+                                            candidateMap[nr][nc] = true;
+                                            candidates.push({ r: nr, c: nc });
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Sort candidates based on simple heuristic for better Alpha-Beta pruning
+                candidates.forEach(move => {
+                    move.score = this.evaluatePoint(move.r, move.c, WHITE) + this.evaluatePoint(move.r, move.c, BLACK);
+                });
+                candidates.sort((a, b) => b.score - a.score);
+
+                return candidates.slice(0, 20); // Top 20 moves
+            }
+
+            minimax(depth, isMaximizing, alpha, beta) {
+                if (depth === 0) {
+                    return this.evaluateBoard();
+                }
+
+                const candidates = this.getCandidateMoves();
+                if (candidates.length === 0) return 0;
+
+                if (isMaximizing) {
+                    let maxEval = -Infinity;
+                    for (let move of candidates) {
+                        this.board[move.r][move.c] = WHITE;
+                        if (this.checkWin(move.r, move.c, WHITE).isWin) {
+                            this.board[move.r][move.c] = EMPTY;
+                            return 100000;
+                        }
+                        let evaluation = this.minimax(depth - 1, false, alpha, beta);
+                        this.board[move.r][move.c] = EMPTY;
+
+                        maxEval = Math.max(maxEval, evaluation);
+                        alpha = Math.max(alpha, evaluation);
+                        if (beta <= alpha) break;
+                    }
+                    return maxEval;
+                } else {
+                    let minEval = Infinity;
+                    for (let move of candidates) {
+                        this.board[move.r][move.c] = BLACK;
+                        if (this.checkWin(move.r, move.c, BLACK).isWin) {
+                            this.board[move.r][move.c] = EMPTY;
+                            return -100000;
+                        }
+                        let evaluation = this.minimax(depth - 1, true, alpha, beta);
+                        this.board[move.r][move.c] = EMPTY;
+
+                        minEval = Math.min(minEval, evaluation);
+                        beta = Math.min(beta, evaluation);
+                        if (beta <= alpha) break;
+                    }
+                    return minEval;
+                }
+            }
+
+            evaluateBoard() {
+                let aiScore = 0;
+                let playerScore = 0;
+
+                for (let r = 0; r < BOARD_SIZE; r++) {
+                    for (let c = 0; c < BOARD_SIZE; c++) {
+                        if (this.board[r][c] === WHITE) {
+                            aiScore += this.evaluatePoint(r, c, WHITE);
+                        } else if (this.board[r][c] === BLACK) {
+                            playerScore += this.evaluatePoint(r, c, BLACK);
+                        }
+                    }
+                }
+
+                return aiScore - playerScore * 1.2; // Slightly defensive bias against player
+            }
+
+            evaluatePoint(r, c, color) {
+                let totalScore = 0;
+                const directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
+
+                for (let [dr, dc] of directions) {
+                    let count = 1;
+                    let openEnds = 0;
+
+                    // Forward
+                    let nr = r + dr, nc = c + dc;
+                    while (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE && this.board[nr][nc] === color) {
+                        count++;
+                        nr += dr;
+                        nc += dc;
+                    }
+                    if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE && this.board[nr][nc] === EMPTY) {
+                        openEnds++;
+                    }
+
+                    // Backward
+                    nr = r - dr; nc = c - dc;
+                    while (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE && this.board[nr][nc] === color) {
+                        count++;
+                        nr -= dr;
+                        nc -= dc;
+                    }
+                    if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE && this.board[nr][nc] === EMPTY) {
+                        openEnds++;
+                    }
+
+                    // Pattern Weighting
+                    if (count >= 5) totalScore += 100000;
+                    else if (count === 4 && openEnds === 2) totalScore += 10000;
+                    else if (count === 4 && openEnds === 1) totalScore += 1000;
+                    else if (count === 3 && openEnds === 2) totalScore += 1000;
+                    else if (count === 3 && openEnds === 1) totalScore += 100;
+                    else if (count === 2 && openEnds === 2) totalScore += 100;
+                    else if (count === 2 && openEnds === 1) totalScore += 10;
+                }
+
+                return totalScore;
+            }
+
+            // Modal Display Helper
+            showModal(title, message, iconType) {
+                const modal = document.getElementById('gameModal');
+                const modalContent = document.getElementById('modalContent');
+                document.getElementById('modalTitle').textContent = title;
+                document.getElementById('modalMessage').textContent = message;
+
+                const icon = document.getElementById('modalIcon');
+                if (iconType === 'trophy') icon.className = "fa-solid fa-trophy text-3xl text-amber-400";
+                else if (iconType === 'robot') icon.className = "fa-solid fa-robot text-3xl text-red-400";
+                else icon.className = "fa-solid fa-handshake text-3xl text-slate-400";
+
+                modal.classList.remove('opacity-0', 'pointer-events-none');
+                modalContent.classList.remove('scale-95');
+                modalContent.classList.add('scale-100');
+            }
+
+            hideModal() {
+                const modal = document.getElementById('gameModal');
+                const modalContent = document.getElementById('modalContent');
+                modal.classList.add('opacity-0', 'pointer-events-none');
+                modalContent.classList.remove('scale-100');
+                modalContent.classList.add('scale-95');
+            }
+        }
+
+        // Initialize Game on window load
+        window.onload = () => {
+            const game = new GomokuGame();
+        };
+    </script>
+</body>
+</html>
