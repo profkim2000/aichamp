@@ -37,10 +37,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-402a7461.js";
+            window.path_to_searchindex_js = "searchindex-f4911f8f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-ca7f4668.js"></script>
+        <script src="toc-e0c3d771.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -362,6 +362,2411 @@
 <p>url이 복잡한데 url은 project 이름을 따라가도록 되어 있다. 그래서 project 이름을 변경하면 더 짧은 주소로 접근할 수 있게 된다.</p>
 <p>project 이름을 변경하는 방법은, 위 이미지에서 “Project configuration” 버튼을 눌러 안으로 들어간 화면에서 “Change project name“을 누르는 것이다.</p>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="웹-앱-예시"><a class="header" href="#웹-앱-예시">웹 앱 예시</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="스네이크-게임"><a href="#스네이크-게임" class="header">스네이크 게임</a></h1>
+
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Classic Neon Snake Game</title>
+  <!-- Tailwind CSS CDN for styling UI overlay -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Outfit:wght@400;600;800&display=swap');
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: #0b0f19;
+      color: #f3f4f6;
+      touch-action: manipulation;
+      user-select: none;
+    }
+
+    .pixel-font {
+      font-family: 'Press Start 2P', monospace;
+    }
+
+    /* Canvas Glow Effects */
+    .game-board-container {
+      box-shadow: 0 0 30px rgba(16, 185, 129, 0.15), inset 0 0 15px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Custom Button Hover Effects */
+    .btn-arcade {
+      transition: all 0.15s ease;
+      box-shadow: 0 4px 0 #047857;
+    }
+    .btn-arcade:active {
+      transform: translateY(4px);
+      box-shadow: 0 0 0 #047857;
+    }
+
+    /* Pulse Animation for Food indicators */
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(1.05); }
+    }
+    .pulse-item {
+      animation: pulse-glow 1.5s infinite;
+    }
+
+    /* D-pad control layout */
+    .dpad-btn {
+      background: linear-gradient(145deg, #1f2937, #111827);
+      box-shadow: 3px 3px 6px #0b0f17, -3px -3px 6px #273347;
+    }
+    .dpad-btn:active {
+      background: #10b981;
+      box-shadow: inset 2px 2px 5px #047857;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-between p-2 md:p-6 overflow-x-hidden">
+  <!-- Top Navigation & Header -->
+  <header class="w-full max-w-lg flex justify-between items-center mb-2 px-2">
+    
+<div class="flex items-center space-x-2">
+      <span class="fa-svg text-emerald-400 text-2xl md:text-3xl"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M222.6 43.2l-.2 4.8H288c53 0 96 43 96 96s-43 96-96 96H248V160h40c8.8 0 16-7.2 16-16s-7.2-16-16-16H248 220l-4.5 144H256c53 0 96 43 96 96s-43 96-96 96H240V384h16c8.8 0 16-7.2 16-16s-7.2-16-16-16H213l-3.1 99.5L208.5 495l0 1c-.3 8.9-7.6 16-16.5 16s-16.2-7.1-16.5-16l0-1-1-31H136c-22.1 0-40-17.9-40-40s17.9-40 40-40h36l-1-32H152c-53 0-96-43-96-96c0-47.6 34.6-87.1 80-94.7V256c0 8.8 7.2 16 16 16h16.5L164 128H136 122.6c-9 18.9-28.3 32-50.6 32H56c-30.9 0-56-25.1-56-56S25.1 48 56 48h8 8 89.5l-.1-4.8L161 32c0-.7 0-1.3 0-1.9c.5-16.6 14.1-30 31-30s30.5 13.4 31 30c0 .6 0 1.3 0 1.9l-.4 11.2zM64 112c8.8 0 16-7.2 16-16s-7.2-16-16-16s-16 7.2-16 16s7.2 16 16 16z"/></svg></span>
+      
+<h1 class="pixel-font text-emerald-400 text-sm md:text-base font-bold tracking-wider">NEON SNAKE</h1>
+
+    </div>
+
+    
+<div class="flex items-center space-x-3">
+      <button id="soundToggle" class="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-emerald-400 border border-gray-700 transition">
+        <span class="fa-svg text-lg" id="soundIcon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M533.6 32.5C598.5 85.3 640 165.8 640 256s-41.5 170.8-106.4 223.5c-10.3 8.4-25.4 6.8-33.8-3.5s-6.8-25.4 3.5-33.8C557.5 398.2 592 331.2 592 256s-34.5-142.2-88.7-186.3c-10.3-8.4-11.8-23.5-3.5-33.8s23.5-11.8 33.8-3.5zM473.1 107c43.2 35.2 70.9 88.9 70.9 149s-27.7 113.8-70.9 149c-10.3 8.4-25.4 6.8-33.8-3.5s-6.8-25.4 3.5-33.8C475.3 341.3 496 301.1 496 256s-20.7-85.3-53.2-111.8c-10.3-8.4-11.8-23.5-3.5-33.8s23.5-11.8 33.8-3.5zm-60.5 74.5C434.1 199.1 448 225.9 448 256s-13.9 56.9-35.4 74.5c-10.3 8.4-25.4 6.8-33.8-3.5s-6.8-25.4 3.5-33.8C393.1 284.4 400 271 400 256s-6.9-28.4-17.7-37.3c-10.3-8.4-11.8-23.5-3.5-33.8s23.5-11.8 33.8-3.5zM301.1 34.8C312.6 40 320 51.4 320 64V448c0 12.6-7.4 24-18.9 29.2s-25 3.1-34.4-5.3L131.8 352H64c-35.3 0-64-28.7-64-64V224c0-35.3 28.7-64 64-64h67.8L266.7 40.1c9.4-8.4 22.9-10.4 34.4-5.3z"/></svg></span>
+      </button>
+      <button id="pauseBtn" class="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-amber-400 border border-gray-700 transition" disabled="">
+        <span class="fa-svg text-lg" id="pauseIcon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M48 64C21.5 64 0 85.5 0 112V400c0 26.5 21.5 48 48 48H80c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H48zm192 0c-26.5 0-48 21.5-48 48V400c0 26.5 21.5 48 48 48h32c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H240z"/></svg></span>
+      </button>
+    </div>
+
+  </header>
+  <!-- Score Board Section -->
+  
+<div class="w-full max-w-lg grid grid-cols-2 gap-3 mb-3">
+    
+<div class="bg-gray-900/80 border border-emerald-500/30 rounded-xl p-3 flex flex-col items-center justify-center">
+      <span class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Score</span>
+      <span id="currentScore" class="pixel-font text-xl md:text-2xl text-emerald-400 mt-1">0</span>
+    </div>
+
+    
+<div class="bg-gray-900/80 border border-amber-500/30 rounded-xl p-3 flex flex-col items-center justify-center">
+      <span class="text-xs text-gray-400 font-semibold uppercase tracking-wider">High Score</span>
+      <span id="highScore" class="pixel-font text-xl md:text-2xl text-amber-400 mt-1">0</span>
+    </div>
+
+  </div>
+
+  <!-- Main Game Area -->
+  <main class="relative w-full max-w-lg aspect-square flex justify-center items-center">
+    
+<div class="game-board-container relative w-full h-full rounded-2xl overflow-hidden border-2 border-emerald-500/40 bg-gray-950">
+      <canvas id="gameCanvas" class="w-full h-full block"></canvas>
+<pre><code>  &lt;!-- Start Game Overlay --&gt;
+  &lt;div id="startOverlay" class="absolute inset-0 bg-gray-950/90 backdrop-blur-sm flex flex-col justify-center items-center p-6 text-center z-10"&gt;
+    &lt;div class="w-20 h-20 rounded-full bg-emerald-500/10 border-2 border-emerald-400 flex items-center justify-center mb-4 pulse-item"&gt;
+      &lt;i class="fa-solid fa-play text-emerald-400 text-3xl ml-1"&gt;&lt;/i&gt;
+    &lt;/div&gt;
+    &lt;h2 class="text-2xl font-bold text-white mb-2"&gt;READY TO PLAY?&lt;/h2&gt;
+    &lt;p class="text-sm text-gray-400 mb-6 max-w-xs"&gt;Use Keyboard Arrow keys / WASD or On-screen controls to direct the snake.&lt;/p&gt;
+    &lt;button id="startBtn" class="btn-arcade bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-extrabold px-8 py-3 rounded-xl text-lg tracking-wide uppercase"&gt;
+      Start Game
+    &lt;/button&gt;
+  &lt;/div&gt;
+
+  &lt;!-- Game Over Overlay --&gt;
+  &lt;div id="gameOverOverlay" class="hidden absolute inset-0 bg-gray-950/95 backdrop-blur-md flex flex-col justify-center items-center p-6 text-center z-20"&gt;
+    &lt;h2 class="pixel-font text-rose-500 text-xl md:text-2xl mb-2 animate-bounce"&gt;GAME OVER&lt;/h2&gt;
+    &lt;p id="gameOverReason" class="text-xs text-gray-400 mb-4"&gt;You hit the wall!&lt;/p&gt;
+    
+    &lt;div class="w-full max-w-xs bg-gray-900 border border-gray-800 rounded-xl p-4 mb-6 space-y-2"&gt;
+      &lt;div class="flex justify-between items-center text-sm"&gt;
+        &lt;span class="text-gray-400"&gt;Final Score:&lt;/span&gt;
+        &lt;span id="finalScore" class="pixel-font text-emerald-400 text-base"&gt;0&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div class="flex justify-between items-center text-sm"&gt;
+        &lt;span class="text-gray-400"&gt;Items Eaten:&lt;/span&gt;
+        &lt;span id="finalItems" class="font-bold text-white"&gt;0&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div class="flex justify-between items-center text-sm"&gt;
+        &lt;span class="text-gray-400"&gt;Speed Level:&lt;/span&gt;
+        &lt;span id="finalSpeed" class="font-bold text-amber-400"&gt;1x&lt;/span&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;button id="restartBtn" class="btn-arcade bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-extrabold px-8 py-3 rounded-xl text-lg tracking-wide uppercase"&gt;
+      Play Again
+    &lt;/button&gt;
+  &lt;/div&gt;
+
+  &lt;!-- Pause Overlay --&gt;
+  &lt;div id="pauseOverlay" class="hidden absolute inset-0 bg-gray-950/80 backdrop-blur-sm flex flex-col justify-center items-center z-10"&gt;
+    &lt;span class="pixel-font text-amber-400 text-xl tracking-widest mb-4"&gt;PAUSED&lt;/span&gt;
+    &lt;button id="resumeBtn" class="px-6 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-700"&gt;
+      Tap to Resume
+    &lt;/button&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
+  
+  <!-- On-Screen D-Pad Controls for Mobile -->
+  <section class="w-full max-w-lg my-4 flex flex-col items-center justify-center">
+    
+<div class="grid grid-cols-3 gap-2 w-48 h-48">
+      
+<div></div>
+
+      <button id="btnUp" class="dpad-btn rounded-xl flex items-center justify-center text-emerald-400 text-xl active:scale-95 transition">
+        <span class="fa-svg"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M233.4 105.4c12.5-12.5 32.8-12.5 45.3 0l192 192c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L256 173.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l192-192z"/></svg></span>
+      </button>
+      
+<div></div>
+
+<pre><code>  &lt;button id="btnLeft" class="dpad-btn rounded-xl flex items-center justify-center text-emerald-400 text-xl active:scale-95 transition"&gt;
+    &lt;i class="fa-solid fa-chevron-left"&gt;&lt;/i&gt;
+  &lt;/button&gt;
+  &lt;div class="flex items-center justify-center text-xs text-gray-600 font-mono"&gt;D-PAD&lt;/div&gt;
+  &lt;button id="btnRight" class="dpad-btn rounded-xl flex items-center justify-center text-emerald-400 text-xl active:scale-95 transition"&gt;
+    &lt;i class="fa-solid fa-chevron-right"&gt;&lt;/i&gt;
+  &lt;/button&gt;
+
+  &lt;div&gt;&lt;/div&gt;
+  &lt;button id="btnDown" class="dpad-btn rounded-xl flex items-center justify-center text-emerald-400 text-xl active:scale-95 transition"&gt;
+    &lt;i class="fa-solid fa-chevron-down"&gt;&lt;/i&gt;
+  &lt;/button&gt;
+  &lt;div&gt;&lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
+  
+  <!-- Footer Info -->
+  <footer class="text-center text-xs text-gray-500 mb-2">
+    Classic Snake Engine • Built with HTML5 Canvas &amp; Web Audio API
+  </footer>
+  <script>
+    /* ===================================================================
+       SOUND SYNTHESIZER (Web Audio API)
+       =================================================================== */
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioContext();
+        }
+      }
+
+      playEatSound(isSpecial = false) {
+        if (this.muted || !this.ctx) return;
+        
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        const now = this.ctx.currentTime;
+        if (isSpecial) {
+          // Special food sound (higher pitch burst)
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(400, now);
+          osc.frequency.exponentialRampToValueAtTime(880, now + 0.15);
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+          osc.start(now);
+          osc.stop(now + 0.15);
+        } else {
+          // Normal eat sound
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(300, now);
+          osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+          gain.gain.setValueAtTime(0.25, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+          osc.start(now);
+          osc.stop(now + 0.1);
+        }
+      }
+
+      playGameOverSound() {
+        if (this.muted || !this.ctx) return;
+
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        const now = this.ctx.currentTime;
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.exponentialRampToValueAtTime(60, now + 0.4);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+
+        osc.start(now);
+        osc.stop(now + 0.4);
+      }
+
+      playTurnSound() {
+        if (this.muted || !this.ctx) return;
+
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        const now = this.ctx.currentTime;
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(150, now);
+        gain.gain.setValueAtTime(0.05, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+
+        osc.start(now);
+        osc.stop(now + 0.03);
+      }
+    }
+
+    /* ===================================================================
+       GAME ENGINE & LOGIC
+       =================================================================== */
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // UI Elements
+    const startOverlay = document.getElementById('startOverlay');
+    const gameOverOverlay = document.getElementById('gameOverOverlay');
+    const pauseOverlay = document.getElementById('pauseOverlay');
+    const startBtn = document.getElementById('startBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resumeBtn = document.getElementById('resumeBtn');
+    const soundToggle = document.getElementById('soundToggle');
+    const soundIcon = document.getElementById('soundIcon');
+    
+    // Stats Displays
+    const currentScoreEl = document.getElementById('currentScore');
+    const highScoreEl = document.getElementById('highScore');
+    const finalScoreEl = document.getElementById('finalScore');
+    const finalItemsEl = document.getElementById('finalItems');
+    const finalSpeedEl = document.getElementById('finalSpeed');
+    const gameOverReasonEl = document.getElementById('gameOverReason');
+
+    // Game Config Constants
+    const GRID_SIZE = 20; // 20x20 Grid
+    let CELL_SIZE = 0; // Dynamic size based on canvas width
+
+    // Game State Variables
+    let snake = [];
+    let direction = { x: 1, y: 0 };
+    let nextDirection = { x: 1, y: 0 };
+    let food = { x: 0, y: 0, type: 'normal' }; // normal or special
+    let specialFoodTimer = null;
+    let score = 0;
+    let highScore = localStorage.getItem('snake_highscore') || 0;
+    let itemsEaten = 0;
+    let baseSpeed = 130; // Milliseconds per tick
+    let currentSpeed = 130;
+    let gameLoopTimeout = null;
+    let isRunning = false;
+    let isPaused = false;
+    let particles = []; // Visual particle effects on eating food
+
+    const sounds = new SoundEngine();
+
+    function resizeCanvas() {
+      const container = canvas.parentElement;
+      const size = container.clientWidth;
+      // Set high DPR resolution for crisp rendering
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = size * dpr;
+      canvas.height = size * dpr;
+      CELL_SIZE = canvas.width / GRID_SIZE;
+      ctx.scale(1, 1);
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    highScoreEl.textContent = highScore;
+
+    function initGame() {
+      resizeCanvas();
+      snake = [
+        { x: 5, y: 10 },
+        { x: 4, y: 10 },
+        { x: 3, y: 10 }
+      ];
+      direction = { x: 1, y: 0 };
+      nextDirection = { x: 1, y: 0 };
+      score = 0;
+      itemsEaten = 0;
+      currentSpeed = baseSpeed;
+      particles = [];
+      updateScoreUI();
+      spawnFood();
+    }
+
+    /* ===================================================================
+       FOOD & SPECIAL ITEM SPANNING
+       =================================================================== */
+    function spawnFood() {
+      let validPos = false;
+      let newX, newY;
+
+      while (!validPos) {
+        newX = Math.floor(Math.random() * GRID_SIZE);
+        newY = Math.floor(Math.random() * GRID_SIZE);
+
+        validPos = !snake.some(segment => segment.x === newX && segment.y === newY);
+      }
+
+      // 20% chance for Golden Special Food
+      const isSpecial = Math.random() < 0.2;
+      food = {
+        x: newX,
+        y: newY,
+        type: isSpecial ? 'special' : 'normal',
+        spawnTime: Date.now()
+      };
+    }
+
+    /* ===================================================================
+       PARTICLE VISUAL EFFECTS
+       =================================================================== */
+    function createFoodBurst(x, y, color) {
+      const pixelX = (x + 0.5) * CELL_SIZE;
+      const pixelY = (y + 0.5) * CELL_SIZE;
+
+      for (let i = 0; i < 12; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 4 + 2;
+        particles.push({
+          x: pixelX,
+          y: pixelY,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          radius: Math.random() * 3 + 2,
+          color: color,
+          alpha: 1,
+          life: 20 // frames
+        });
+      }
+    }
+
+    function updateAndDrawParticles() {
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.alpha -= 0.05;
+        p.life--;
+
+        if (p.life <= 0 || p.alpha <= 0) {
+          particles.splice(i, 1);
+          continue;
+        }
+
+        ctx.save();
+        ctx.globalAlpha = p.alpha;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    /* ===================================================================
+       MAIN GAME LOOP
+       =================================================================== */
+    function gameLoop() {
+      if (!isRunning || isPaused) return;
+
+      updateSnake();
+      
+      if (checkCollisions()) {
+        sounds.playGameOverSound();
+        endGame("You crashed into a wall or yourself!");
+        return;
+      }
+
+      render();
+
+      // Dynamic Speed increase based on score
+      currentSpeed = Math.max(60, baseSpeed - Math.floor(score / 30) * 5);
+
+      gameLoopTimeout = setTimeout(gameLoop, currentSpeed);
+    }
+
+    function updateSnake() {
+      direction = { ...nextDirection };
+      const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y };
+
+      // Snake Eats Food
+      if (head.x === food.x && head.y === food.y) {
+        const points = food.type === 'special' ? 30 : 10;
+        score += points;
+        itemsEaten++;
+        
+        sounds.playEatSound(food.type === 'special');
+        createFoodBurst(food.x, food.y, food.type === 'special' ? '#f59e0b' : '#10b981');
+        
+        updateScoreUI();
+        snake.unshift(head); // Grow Snake
+        spawnFood();
+      } else {
+        snake.unshift(head);
+        snake.pop(); // Normal movement
+      }
+    }
+
+    function checkCollisions() {
+      const head = snake[0];
+
+      // Wall collision
+      if (head.x < 0 || head.x >= GRID_SIZE || head.y < 0 || head.y >= GRID_SIZE) {
+        return true;
+      }
+
+      // Self collision
+      for (let i = 1; i < snake.length; i++) {
+        if (head.x === snake[i].x && head.y === snake[i].y) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    /* ===================================================================
+       RENDER FUNCTIONS
+       =================================================================== */
+    function render() {
+      // Clear screen
+      ctx.fillStyle = '#030712';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      drawGrid();
+      drawFood();
+      drawSnake();
+      updateAndDrawParticles();
+    }
+
+    function drawGrid() {
+      ctx.strokeStyle = 'rgba(31, 41, 55, 0.4)';
+      ctx.lineWidth = 1;
+
+      for (let i = 0; i <= GRID_SIZE; i++) {
+        // Vertical lines
+        ctx.beginPath();
+        ctx.moveTo(i * CELL_SIZE, 0);
+        ctx.lineTo(i * CELL_SIZE, canvas.height);
+        ctx.stroke();
+
+        // Horizontal lines
+        ctx.beginPath();
+        ctx.moveTo(0, i * CELL_SIZE);
+        ctx.lineTo(canvas.width, i * CELL_SIZE);
+        ctx.stroke();
+      }
+    }
+
+    function drawSnake() {
+      snake.forEach((segment, index) => {
+        const x = segment.x * CELL_SIZE;
+        const y = segment.y * CELL_SIZE;
+        const padding = 1.5;
+
+        if (index === 0) {
+          // Head Styling
+          ctx.fillStyle = '#34d399'; // Brighter Emerald
+          ctx.beginPath();
+          ctx.roundRect(x + padding, y + padding, CELL_SIZE - padding * 2, CELL_SIZE - padding * 2, 6);
+          ctx.fill();
+
+          // Snake Eyes
+          ctx.fillStyle = '#064e3b';
+          const eyeSize = CELL_SIZE * 0.15;
+          let leftEyeX = x + CELL_SIZE * 0.3;
+          let leftEyeY = y + CELL_SIZE * 0.3;
+          let rightEyeX = x + CELL_SIZE * 0.7;
+          let rightEyeY = y + CELL_SIZE * 0.3;
+
+          if (direction.x === 1) { // Right
+            leftEyeX = x + CELL_SIZE * 0.7; leftEyeY = y + CELL_SIZE * 0.3;
+            rightEyeX = x + CELL_SIZE * 0.7; rightEyeY = y + CELL_SIZE * 0.7;
+          } else if (direction.x === -1) { // Left
+            leftEyeX = x + CELL_SIZE * 0.3; leftEyeY = y + CELL_SIZE * 0.3;
+            rightEyeX = x + CELL_SIZE * 0.3; rightEyeY = y + CELL_SIZE * 0.7;
+          } else if (direction.y === 1) { // Down
+            leftEyeX = x + CELL_SIZE * 0.3; leftEyeY = y + CELL_SIZE * 0.7;
+            rightEyeX = x + CELL_SIZE * 0.7; rightEyeY = y + CELL_SIZE * 0.7;
+          }
+
+          ctx.beginPath();
+          ctx.arc(leftEyeX, leftEyeY, eyeSize, 0, Math.PI * 2);
+          ctx.arc(rightEyeX, rightEyeY, eyeSize, 0, Math.PI * 2);
+          ctx.fill();
+
+        } else {
+          // Body Gradient / Opacity Tapering
+          const alpha = Math.max(0.4, 1 - (index / snake.length) * 0.6);
+          ctx.fillStyle = `rgba(16, 185, 129, ${alpha})`;
+          ctx.beginPath();
+          ctx.roundRect(x + padding, y + padding, CELL_SIZE - padding * 2, CELL_SIZE - padding * 2, 4);
+          ctx.fill();
+        }
+      });
+    }
+
+    function drawFood() {
+      const x = food.x * CELL_SIZE + CELL_SIZE / 2;
+      const y = food.y * CELL_SIZE + CELL_SIZE / 2;
+      const radius = (CELL_SIZE / 2) - 2;
+
+      ctx.save();
+      if (food.type === 'special') {
+        // Glowing Gold Food
+        ctx.shadowColor = '#f59e0b';
+        ctx.shadowBlur = 12;
+        ctx.fillStyle = '#f59e0b';
+      } else {
+        // Glowing Red Food
+        ctx.shadowColor = '#f43f5e';
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = '#f43f5e';
+      }
+
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function updateScoreUI() {
+      currentScoreEl.textContent = score;
+      if (score > highScore) {
+        highScore = score;
+        highScoreEl.textContent = highScore;
+        localStorage.setItem('snake_highscore', highScore);
+      }
+    }
+
+    /* ===================================================================
+       CONTROL & EVENT LISTENERS
+       =================================================================== */
+    function handleDirectionChange(newX, newY) {
+      if (!isRunning || isPaused) return;
+
+      // Prevent 180-degree immediate reverse turns
+      if (newX !== -direction.x || newY !== -direction.y) {
+        if (nextDirection.x !== newX || nextDirection.y !== newY) {
+          sounds.playTurnSound();
+        }
+        nextDirection = { x: newX, y: newY };
+      }
+    }
+
+    window.addEventListener('keydown', (e) => {
+      switch (e.key) {
+        case 'ArrowUp':
+        case 'w':
+        case 'W':
+          e.preventDefault();
+          handleDirectionChange(0, -1);
+          break;
+        case 'ArrowDown':
+        case 's':
+        case 'S':
+          e.preventDefault();
+          handleDirectionChange(0, 1);
+          break;
+        case 'ArrowLeft':
+        case 'a':
+        case 'A':
+          e.preventDefault();
+          handleDirectionChange(-1, 0);
+          break;
+        case 'ArrowRight':
+        case 'd':
+        case 'D':
+          e.preventDefault();
+          handleDirectionChange(1, 0);
+          break;
+        case ' ':
+          e.preventDefault();
+          togglePause();
+          break;
+      }
+    });
+
+    // Touch D-Pad Events
+    document.getElementById('btnUp').addEventListener('click', () => handleDirectionChange(0, -1));
+    document.getElementById('btnDown').addEventListener('click', () => handleDirectionChange(0, 1));
+    document.getElementById('btnLeft').addEventListener('click', () => handleDirectionChange(-1, 0));
+    document.getElementById('btnRight').addEventListener('click', () => handleDirectionChange(1, 0));
+
+    // Game Control Button Actions
+    startBtn.addEventListener('click', () => {
+      sounds.init();
+      startOverlay.classList.add('hidden');
+      pauseBtn.disabled = false;
+      isRunning = true;
+      isPaused = false;
+      initGame();
+      gameLoop();
+    });
+
+    restartBtn.addEventListener('click', () => {
+      gameOverOverlay.classList.add('hidden');
+      pauseBtn.disabled = false;
+      isRunning = true;
+      isPaused = false;
+      initGame();
+      gameLoop();
+    });
+
+    function togglePause() {
+      if (!isRunning) return;
+      isPaused = !isPaused;
+
+      if (isPaused) {
+        pauseOverlay.classList.remove('hidden');
+        document.getElementById('pauseIcon').className = 'fa-solid fa-play text-lg';
+        clearTimeout(gameLoopTimeout);
+      } else {
+        pauseOverlay.classList.add('hidden');
+        document.getElementById('pauseIcon').className = 'fa-solid fa-pause text-lg';
+        gameLoop();
+      }
+    }
+
+    pauseBtn.addEventListener('click', togglePause);
+    resumeBtn.addEventListener('click', togglePause);
+
+    // Audio Mute Toggle
+    soundToggle.addEventListener('click', () => {
+      sounds.init();
+      sounds.muted = !sounds.muted;
+      if (sounds.muted) {
+        soundIcon.className = 'fa-solid fa-volume-xmark text-lg text-gray-500';
+      } else {
+        soundIcon.className = 'fa-solid fa-volume-high text-lg text-emerald-400';
+      }
+    });
+
+    function endGame(reason) {
+      isRunning = false;
+      clearTimeout(gameLoopTimeout);
+      pauseBtn.disabled = true;
+
+      gameOverReasonEl.textContent = reason;
+      finalScoreEl.textContent = score;
+      finalItemsEl.textContent = itemsEaten;
+      
+      const speedMultiplier = (baseSpeed / currentSpeed).toFixed(1);
+      finalSpeedEl.textContent = `${speedMultiplier}x`;
+
+      gameOverOverlay.classList.remove('hidden');
+    }
+
+    // Initial render on canvas start
+    window.onload = () => {
+      resizeCanvas();
+      render();
+    };
+  </script>
+
+</div>
+</section></div>
+</main></body></html><div style="break-before: page; page-break-before: always;"></div>
+<h1 id="오목-게임"><a href="#오목-게임" class="header">오목 게임</a></h1>
+
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>오목 vs AI (Gomoku vs AI)</title>
+    <!-- Tailwind CSS for UI structure -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&amp;display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+<pre><code>    .wood-board {
+        background-color: #e0a96d;
+        background-image: 
+            radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.15) 0%, rgba(0, 0, 0, 0.15) 100%),
+            repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(139, 69, 19, 0.05) 3px, rgba(139, 69, 19, 0.05) 6px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3), inset 0 0 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .dark-board {
+        background-color: #2a2d34;
+        background-image: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.05) 0%, rgba(0, 0, 0, 0.4) 100%);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(0, 0, 0, 0.5);
+    }
+
+    .stone-placed {
+        animation: stoneDrop 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes stoneDrop {
+        0% {
+            transform: scale(1.4);
+            opacity: 0.7;
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    /* Custom Scrollbar for move history */
+    ::-webkit-scrollbar {
+        width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.4);
+    }
+&lt;/style&gt;
+</code></pre>
+
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between items-center p-3 md:p-6">
+<pre><code>&lt;header class="w-full max-w-5xl flex flex-col sm:flex-row justify-between items-center gap-3 mb-4"&gt;
+    &lt;div class="flex items-center gap-3"&gt;
+        &lt;div class="p-2.5 bg-amber-600/20 text-amber-500 rounded-xl border border-amber-500/30"&gt;
+            &lt;i class="fa-solid fa-chess-board text-2xl"&gt;&lt;/i&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+            &lt;h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2"&gt;
+                오목 AI 대결 &lt;span class="text-xs px-2 py-0.5 bg-amber-500/20 text-amber-400 rounded-full border border-amber-500/30"&gt;Gomoku&lt;/span&gt;
+            &lt;/h1&gt;
+            &lt;p class="text-xs text-slate-400"&gt;강력한 AI에 도전하여 5목을 연속으로 완성하세요!&lt;/p&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;!-- Controls Toolbar --&gt;
+    &lt;div class="flex items-center gap-2 bg-slate-800/80 p-1.5 rounded-xl border border-slate-700/60 backdrop-blur-sm"&gt;
+        &lt;select id="difficultySelect" class="bg-slate-700 text-xs font-medium text-slate-200 rounded-lg px-2.5 py-1.5 border border-slate-600 outline-none focus:ring-2 focus:ring-amber-500/50 cursor-pointer transition"&gt;
+            &lt;option value="easy"&gt;난이도: 쉬움 (Easy)&lt;/option&gt;
+            &lt;option value="normal" selected&gt;난이도: 보통 (Normal)&lt;/option&gt;
+            &lt;option value="hard"&gt;난이도: 어려움 (Hard)&lt;/option&gt;
+        &lt;/select&gt;
+
+        &lt;button id="themeToggleBtn" title="테마 변경" class="p-2 text-slate-300 hover:text-white bg-slate-700/50 hover:bg-slate-700 rounded-lg transition border border-slate-600/50"&gt;
+            &lt;i class="fa-solid fa-palette text-sm"&gt;&lt;/i&gt;
+        &lt;/button&gt;
+
+        &lt;button id="soundToggleBtn" title="소리 켜기/끄기" class="p-2 text-slate-300 hover:text-white bg-slate-700/50 hover:bg-slate-700 rounded-lg transition border border-slate-600/50"&gt;
+            &lt;i id="soundIcon" class="fa-solid fa-volume-high text-sm"&gt;&lt;/i&gt;
+        &lt;/button&gt;
+    &lt;/div&gt;
+&lt;/header&gt;
+
+&lt;main class="w-full max-w-5xl flex flex-col lg:flex-row gap-6 justify-center items-stretch flex-1"&gt;
+
+    &lt;!-- Board Section --&gt;
+    &lt;div class="flex-1 flex flex-col items-center justify-center"&gt;
+        &lt;!-- Game Canvas Box --&gt;
+        &lt;div id="boardContainer" class="relative wood-board p-3 md:p-5 rounded-2xl transition-all duration-300 border border-amber-900/30"&gt;
+            &lt;canvas id="omokBoard" class="cursor-pointer block rounded-lg"&gt;&lt;/canvas&gt;
+
+            &lt;!-- Thinking Overlay Indicator --&gt;
+            &lt;div id="aiThinkingOverlay" class="absolute inset-0 bg-black/20 backdrop-blur-[1px] rounded-2xl flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-200"&gt;
+                &lt;div class="bg-slate-900/90 border border-amber-500/40 text-amber-300 px-4 py-2 rounded-xl flex items-center gap-3 shadow-2xl"&gt;
+                    &lt;i class="fa-solid fa-circle-notch fa-spin text-lg"&gt;&lt;/i&gt;
+                    &lt;span class="text-sm font-medium"&gt;AI 연산 중...&lt;/span&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;!-- Dashboard Sidebar --&gt;
+    &lt;div class="w-full lg:w-80 flex flex-col gap-4 justify-between"&gt;
+        
+        &lt;!-- Status Card --&gt;
+        &lt;div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 backdrop-blur-sm flex flex-col gap-3 shadow-lg"&gt;
+            &lt;h2 class="text-xs uppercase tracking-wider text-slate-400 font-semibold flex items-center gap-1.5"&gt;
+                &lt;i class="fa-solid fa-circle-info text-amber-500"&gt;&lt;/i&gt; 게임 상태
+            &lt;/h2&gt;
+
+            &lt;div class="flex items-center justify-between bg-slate-900/70 p-3 rounded-xl border border-slate-700/50"&gt;
+                &lt;div id="playerIndicator" class="flex items-center gap-2.5 transition-all"&gt;
+                    &lt;div class="w-5 h-5 rounded-full bg-slate-900 border-2 border-slate-400 shadow-md"&gt;&lt;/div&gt;
+                    &lt;div class="flex flex-col"&gt;
+                        &lt;span class="text-xs text-slate-400"&gt;당신 (흑돌)&lt;/span&gt;
+                        &lt;span id="playerWinsCount" class="text-xs font-semibold text-emerald-400"&gt;0승&lt;/span&gt;
+                    &lt;/div&gt;
+                &lt;/div&gt;
+                &lt;span class="text-slate-600 font-bold text-sm"&gt;VS&lt;/span&gt;
+                &lt;div id="aiIndicator" class="flex items-center gap-2.5 transition-all opacity-50"&gt;
+                    &lt;div class="flex flex-col items-end"&gt;
+                        &lt;span class="text-xs text-slate-400"&gt;AI (백돌)&lt;/span&gt;
+                        &lt;span id="aiWinsCount" class="text-xs font-semibold text-emerald-400"&gt;0승&lt;/span&gt;
+                    &lt;/div&gt;
+                    &lt;div class="w-5 h-5 rounded-full bg-slate-100 border-2 border-slate-300 shadow-md"&gt;&lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;!-- Turn Status Text Box --&gt;
+            &lt;div id="statusTextContainer" class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-center"&gt;
+                &lt;p id="statusText" class="text-sm font-medium text-amber-300"&gt;당신의 차례입니다 (흑돌)&lt;/p&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;!-- Action Buttons --&gt;
+        &lt;div class="grid grid-cols-2 gap-2"&gt;
+            &lt;button id="undoBtn" class="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 py-3 rounded-xl font-medium border border-slate-700/80 transition shadow-md disabled:opacity-40 disabled:cursor-not-allowed"&gt;
+                &lt;i class="fa-solid fa-rotate-left text-amber-400"&gt;&lt;/i&gt; 무르기
+            &lt;/button&gt;
+            &lt;button id="restartBtn" class="flex items-center justify-center gap-2 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 active:scale-95 text-white py-3 rounded-xl font-medium border border-amber-500/30 transition shadow-lg shadow-amber-900/30"&gt;
+                &lt;i class="fa-solid fa-arrows-rotate"&gt;&lt;/i&gt; 새 게임
+            &lt;/button&gt;
+        &lt;/div&gt;
+
+        &lt;!-- Move History Log --&gt;
+        &lt;div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 backdrop-blur-sm flex-1 flex flex-col max-h-56 lg:max-h-64 shadow-lg"&gt;
+            &lt;div class="flex justify-between items-center mb-2"&gt;
+                &lt;h2 class="text-xs uppercase tracking-wider text-slate-400 font-semibold flex items-center gap-1.5"&gt;
+                    &lt;i class="fa-solid fa-list-ol text-amber-500"&gt;&lt;/i&gt; 착수 기록
+                &lt;/h2&gt;
+                &lt;span id="moveCountBadge" class="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full"&gt;0 수&lt;/span&gt;
+            &lt;/div&gt;
+            
+            &lt;div id="moveLog" class="flex-1 overflow-y-auto space-y-1 pr-1 text-xs font-mono"&gt;
+                &lt;p class="text-slate-500 text-center py-6 italic"&gt;게임이 시작되었습니다.&lt;/p&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+
+    &lt;/div&gt;
+&lt;/main&gt;
+
+&lt;!-- Footer --&gt;
+&lt;footer class="mt-4 text-center text-xs text-slate-500"&gt;
+    오목 (Gomoku) Engine v2.0 • Canvas &amp; Minimax Alpha-Beta Pruning
+&lt;/footer&gt;
+
+&lt;div id="gameModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 p-4"&gt;
+    &lt;div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-sm w-full text-center shadow-2xl transform scale-95 transition-transform duration-300" id="modalContent"&gt;
+        &lt;div id="modalIconContainer" class="w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-4 bg-amber-500/20 text-amber-400 border border-amber-500/40"&gt;
+            &lt;i id="modalIcon" class="fa-solid fa-trophy text-3xl"&gt;&lt;/i&gt;
+        &lt;/div&gt;
+        &lt;h3 id="modalTitle" class="text-xl font-bold text-white mb-2"&gt;승리하였습니다!&lt;/h3&gt;
+        &lt;p id="modalMessage" class="text-sm text-slate-300 mb-6"&gt;뛰어난 수읽기로 AI를 제압했습니다.&lt;/p&gt;
+        &lt;div class="flex gap-2 justify-center"&gt;
+            &lt;button id="modalRestartBtn" class="w-full py-3 bg-amber-600 hover:bg-amber-500 text-white font-medium rounded-xl shadow-lg transition active:scale-95"&gt;
+                다시 하기
+            &lt;/button&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+    // Sound FX Manager using Web Audio API (No external assets required)
+    class SoundEngine {
+        constructor() {
+            this.ctx = null;
+            this.muted = false;
+        }
+
+        init() {
+            if (!this.ctx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    this.ctx = new AudioContext();
+                }
+            }
+            if (this.ctx &amp;&amp; this.ctx.state === 'suspended') {
+                this.ctx.resume();
+            }
+        }
+
+        playStoneSound(isBlack = true) {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+
+            osc.type = 'triangle';
+            // Subtle pitch difference between Black and White stone sound
+            osc.frequency.setValueAtTime(isBlack ? 380 : 440, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + 0.08);
+
+            gain.gain.setValueAtTime(0.6, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.08);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.08);
+        }
+
+        playWinSound() {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+
+            const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+            notes.forEach((freq, idx) =&gt; {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+
+                const startTime = this.ctx.currentTime + idx * 0.1;
+                gain.gain.setValueAtTime(0.3, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.3);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(startTime);
+                osc.stop(startTime + 0.3);
+            });
+        }
+
+        playLoseSound() {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+
+            const notes = [400, 350, 300, 250];
+            notes.forEach((freq, idx) =&gt; {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.value = freq;
+
+                const startTime = this.ctx.currentTime + idx * 0.12;
+                gain.gain.setValueAtTime(0.2, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.2);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(startTime);
+                osc.stop(startTime + 0.2);
+            });
+        }
+    }
+
+    const soundEngine = new SoundEngine();
+
+    const BOARD_SIZE = 15;
+    const EMPTY = 0;
+    const BLACK = 1; // Player
+    const WHITE = 2; // AI
+
+    class GomokuGame {
+        constructor() {
+            this.board = Array(BOARD_SIZE).fill(null).map(() =&gt; Array(BOARD_SIZE).fill(EMPTY));
+            this.history = []; // [{r, c, color}]
+            this.currentPlayer = BLACK;
+            this.gameOver = false;
+            this.winner = null;
+            this.winningLine = [];
+            this.difficulty = 'normal'; // easy, normal, hard
+            this.theme = 'wood'; // wood, dark
+            this.playerScore = 0;
+            this.aiScore = 0;
+
+            // Canvas setup
+            this.canvas = document.getElementById('omokBoard');
+            this.ctx = this.canvas.getContext('2d');
+            this.cellSize = 0;
+            this.padding = 0;
+
+            this.initDOM();
+            this.resizeCanvas();
+            window.addEventListener('resize', () =&gt; this.resizeCanvas());
+        }
+
+        initDOM() {
+            this.difficultySelect = document.getElementById('difficultySelect');
+            this.statusText = document.getElementById('statusText');
+            this.statusContainer = document.getElementById('statusTextContainer');
+            this.moveLog = document.getElementById('moveLog');
+            this.moveCountBadge = document.getElementById('moveCountBadge');
+            this.undoBtn = document.getElementById('undoBtn');
+            this.restartBtn = document.getElementById('restartBtn');
+            this.aiThinkingOverlay = document.getElementById('aiThinkingOverlay');
+            this.playerIndicator = document.getElementById('playerIndicator');
+            this.aiIndicator = document.getElementById('aiIndicator');
+
+            // Event Listeners
+            this.canvas.addEventListener('click', (e) =&gt; this.handleCanvasClick(e));
+            this.undoBtn.addEventListener('click', () =&gt; this.undoMove());
+            this.restartBtn.addEventListener('click', () =&gt; this.resetGame());
+            
+            this.difficultySelect.addEventListener('change', (e) =&gt; {
+                this.difficulty = e.target.value;
+            });
+
+            document.getElementById('themeToggleBtn').addEventListener('click', () =&gt; {
+                this.theme = this.theme === 'wood' ? 'dark' : 'wood';
+                const container = document.getElementById('boardContainer');
+                if (this.theme === 'dark') {
+                    container.classList.remove('wood-board');
+                    container.classList.add('dark-board');
+                } else {
+                    container.classList.remove('dark-board');
+                    container.classList.add('wood-board');
+                }
+                this.drawBoard();
+            });
+
+            const soundToggleBtn = document.getElementById('soundToggleBtn');
+            const soundIcon = document.getElementById('soundIcon');
+            soundToggleBtn.addEventListener('click', () =&gt; {
+                soundEngine.muted = !soundEngine.muted;
+                if (soundEngine.muted) {
+                    soundIcon.className = 'fa-solid fa-volume-xmark text-sm text-red-400';
+                } else {
+                    soundIcon.className = 'fa-solid fa-volume-high text-sm text-slate-300';
+                }
+            });
+
+            // Modal
+            document.getElementById('modalRestartBtn').addEventListener('click', () =&gt; {
+                this.hideModal();
+                this.resetGame();
+            });
+        }
+
+        resizeCanvas() {
+            const container = document.getElementById('boardContainer');
+            const maxCanvasWidth = Math.min(window.innerWidth - 48, 540);
+            
+            // Keep canvas square
+            this.canvas.width = maxCanvasWidth;
+            this.canvas.height = maxCanvasWidth;
+
+            this.padding = maxCanvasWidth / (BOARD_SIZE + 1);
+            this.cellSize = (maxCanvasWidth - this.padding * 2) / (BOARD_SIZE - 1);
+
+            this.drawBoard();
+        }
+
+        resetGame() {
+            this.board = Array(BOARD_SIZE).fill(null).map(() =&gt; Array(BOARD_SIZE).fill(EMPTY));
+            this.history = [];
+            this.currentPlayer = BLACK;
+            this.gameOver = false;
+            this.winner = null;
+            this.winningLine = [];
+            this.updateUI();
+            this.drawBoard();
+        }
+
+        drawBoard() {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+            const isDark = this.theme === 'dark';
+            const gridColor = isDark ? '#4a5568' : '#7c4a03';
+            const textColor = isDark ? '#a0aec0' : '#8c5305';
+
+            // 1. Draw Grid Lines
+            this.ctx.lineWidth = 1.2;
+            this.ctx.strokeStyle = gridColor;
+
+            for (let i = 0; i &lt; BOARD_SIZE; i++) {
+                const pos = this.padding + i * this.cellSize;
+
+                // Vertical Line
+                this.ctx.beginPath();
+                this.ctx.moveTo(pos, this.padding);
+                this.ctx.lineTo(pos, this.canvas.height - this.padding);
+                this.ctx.stroke();
+
+                // Horizontal Line
+                this.ctx.beginPath();
+                this.ctx.moveTo(this.padding, pos);
+                this.ctx.lineTo(this.canvas.width - this.padding, pos);
+                this.ctx.stroke();
+            }
+
+            // Outer border line thicker
+            this.ctx.lineWidth = 2.5;
+            this.ctx.strokeRect(
+                this.padding, 
+                this.padding, 
+                this.canvas.width - this.padding * 2, 
+                this.canvas.height - this.padding * 2
+            );
+
+            // 2. Star Points (화점)
+            const starPoints = [3, 7, 11];
+            this.ctx.fillStyle = gridColor;
+            for (let r of starPoints) {
+                for (let c of starPoints) {
+                    const x = this.padding + c * this.cellSize;
+                    const y = this.padding + r * this.cellSize;
+                    this.ctx.beginPath();
+                    this.ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+            }
+
+            // 3. Draw Stones
+            for (let r = 0; r &lt; BOARD_SIZE; r++) {
+                for (let c = 0; c &lt; BOARD_SIZE; c++) {
+                    if (this.board[r][c] !== EMPTY) {
+                        this.drawStone(r, c, this.board[r][c]);
+                    }
+                }
+            }
+
+            // 4. Highlight Last Move
+            if (this.history.length &gt; 0) {
+                const lastMove = this.history[this.history.length - 1];
+                const x = this.padding + lastMove.c * this.cellSize;
+                const y = this.padding + lastMove.r * this.cellSize;
+
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, this.cellSize * 0.18, 0, Math.PI * 2);
+                this.ctx.fillStyle = lastMove.color === BLACK ? '#ef4444' : '#3b82f6';
+                this.ctx.fill();
+                this.ctx.strokeStyle = '#ffffff';
+                this.ctx.lineWidth = 1.5;
+                this.ctx.stroke();
+            }
+
+            // 5. Highlight Winning Line
+            if (this.winningLine.length &gt; 0) {
+                this.ctx.strokeStyle = '#10b981'; // Green accent
+                this.ctx.lineWidth = 4;
+                this.ctx.beginPath();
+                const startX = this.padding + this.winningLine[0].c * this.cellSize;
+                const startY = this.padding + this.winningLine[0].r * this.cellSize;
+                const endX = this.padding + this.winningLine[this.winningLine.length - 1].c * this.cellSize;
+                const endY = this.padding + this.winningLine[this.winningLine.length - 1].r * this.cellSize;
+                
+                this.ctx.moveTo(startX, startY);
+                this.ctx.lineTo(endX, endY);
+                this.ctx.stroke();
+            }
+        }
+
+        drawStone(r, c, color) {
+            const x = this.padding + c * this.cellSize;
+            const y = this.padding + r * this.cellSize;
+            const radius = this.cellSize * 0.42;
+
+            this.ctx.save();
+
+            // Drop Shadow
+            this.ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+            this.ctx.shadowBlur = 6;
+            this.ctx.shadowOffsetX = 2;
+            this.ctx.shadowOffsetY = 3;
+
+            // Radial Gradient for 3D sphere look
+            const gradient = this.ctx.createRadialGradient(
+                x - radius * 0.3, y - radius * 0.3, radius * 0.1,
+                x, y, radius
+            );
+
+            if (color === BLACK) {
+                gradient.addColorStop(0, '#555555');
+                gradient.addColorStop(0.8, '#111111');
+                gradient.addColorStop(1, '#000000');
+            } else {
+                gradient.addColorStop(0, '#ffffff');
+                gradient.addColorStop(0.85, '#e2e8f0');
+                gradient.addColorStop(1, '#cbd5e1');
+            }
+
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+            this.ctx.fillStyle = gradient;
+            this.ctx.fill();
+
+            this.ctx.restore();
+        }
+
+        handleCanvasClick(e) {
+            if (this.gameOver || this.currentPlayer !== BLACK) return;
+
+            const rect = this.canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+
+            // Find closest intersection
+            const c = Math.round((clickX - this.padding) / this.cellSize);
+            const r = Math.round((clickY - this.padding) / this.cellSize);
+
+            if (r &gt;= 0 &amp;&amp; r &lt; BOARD_SIZE &amp;&amp; c &gt;= 0 &amp;&amp; c &lt; BOARD_SIZE) {
+                if (this.board[r][c] === EMPTY) {
+                    this.makeMove(r, c, BLACK);
+
+                    if (!this.gameOver) {
+                        this.currentPlayer = WHITE;
+                        this.updateUI();
+                        
+                        // Trigger AI Move after short delay for realistic feel
+                        this.setAiThinking(true);
+                        setTimeout(() =&gt; {
+                            this.triggerAiMove();
+                            this.setAiThinking(false);
+                        }, 300);
+                    }
+                }
+            }
+        }
+
+        makeMove(r, c, color) {
+            this.board[r][c] = color;
+            this.history.push({ r, c, color });
+            soundEngine.playStoneSound(color === BLACK);
+
+            const winCheck = this.checkWin(r, c, color);
+            if (winCheck.isWin) {
+                this.gameOver = true;
+                this.winner = color;
+                this.winningLine = winCheck.line;
+                if (color === BLACK) {
+                    this.playerScore++;
+                    soundEngine.playWinSound();
+                    this.showModal('승리하였습니다! 🎉', '뛰어난 수읽기로 AI를 제압했습니다.', 'trophy');
+                } else {
+                    this.aiScore++;
+                    soundEngine.playLoseSound();
+                    this.showModal('AI가 승리하였습니다 🤖', '다시 도전하여 AI의 공세를 막아보세요!', 'robot');
+                }
+            } else if (this.history.length === BOARD_SIZE * BOARD_SIZE) {
+                this.gameOver = true;
+                this.winner = null;
+                this.showModal('무승부입니다! 🤝', '더 이상 둘 수 있는 공간이 없습니다.', 'handshake');
+            }
+
+            this.drawBoard();
+            this.updateUI();
+        }
+
+        undoMove() {
+            if (this.history.length === 0 || this.gameOver) return;
+
+            // If playing against AI, undo twice (AI move + Player move)
+            let movesToUndo = 1;
+            if (this.history.length &gt;= 2 &amp;&amp; this.history[this.history.length - 1].color === WHITE) {
+                movesToUndo = 2;
+            }
+
+            for (let i = 0; i &lt; movesToUndo; i++) {
+                const last = this.history.pop();
+                if (last) {
+                    this.board[last.r][last.c] = EMPTY;
+                }
+            }
+
+            this.currentPlayer = BLACK;
+            this.gameOver = false;
+            this.winner = null;
+            this.winningLine = [];
+            this.drawBoard();
+            this.updateUI();
+        }
+
+        setAiThinking(isThinking) {
+            if (isThinking) {
+                this.aiThinkingOverlay.classList.remove('opacity-0', 'pointer-events-none');
+            } else {
+                this.aiThinkingOverlay.classList.add('opacity-0', 'pointer-events-none');
+            }
+        }
+
+        updateUI() {
+            // Update player wins count
+            document.getElementById('playerWinsCount').textContent = `${this.playerScore}승`;
+            document.getElementById('aiWinsCount').textContent = `${this.aiScore}승`;
+
+            // Update Status text
+            if (this.gameOver) {
+                if (this.winner === BLACK) {
+                    this.statusText.textContent = "🏆 당신의 승리입니다!";
+                    this.statusContainer.className = "p-3 bg-emerald-500/20 border border-emerald-500/40 rounded-xl text-center";
+                } else if (this.winner === WHITE) {
+                    this.statusText.textContent = "🤖 AI의 승리입니다.";
+                    this.statusContainer.className = "p-3 bg-red-500/20 border border-red-500/40 rounded-xl text-center";
+                } else {
+                    this.statusText.textContent = "🤝 무승부입니다.";
+                    this.statusContainer.className = "p-3 bg-slate-500/20 border border-slate-500/40 rounded-xl text-center";
+                }
+            } else {
+                if (this.currentPlayer === BLACK) {
+                    this.statusText.textContent = "당신의 차례입니다 (흑돌)";
+                    this.statusContainer.className = "p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-center";
+                    this.playerIndicator.classList.remove('opacity-50');
+                    this.aiIndicator.classList.add('opacity-50');
+                } else {
+                    this.statusText.textContent = "AI가 생각 중입니다... (백돌)";
+                    this.statusContainer.className = "p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl text-center";
+                    this.aiIndicator.classList.remove('opacity-50');
+                    this.playerIndicator.classList.add('opacity-50');
+                }
+            }
+
+            // Update Undo Button state
+            this.undoBtn.disabled = this.history.length === 0 || this.currentPlayer === WHITE;
+
+            // Update Move Log
+            this.moveCountBadge.textContent = `${this.history.length} 수`;
+            if (this.history.length === 0) {
+                this.moveLog.innerHTML = `&lt;p class="text-slate-500 text-center py-6 italic"&gt;게임이 시작되었습니다.&lt;/p&gt;`;
+            } else {
+                this.moveLog.innerHTML = this.history.map((m, idx) =&gt; {
+                    const colName = String.fromCharCode(65 + m.c); // A-O
+                    const rowName = 15 - m.r; // 1-15
+                    const playerTag = m.color === BLACK ? 
+                        `&lt;span class="text-slate-300 font-semibold"&gt;&lt;i class="fa-solid fa-circle text-[10px] mr-1 text-slate-400"&gt;&lt;/i&gt;흑&lt;/span&gt;` : 
+                        `&lt;span class="text-blue-300 font-semibold"&gt;&lt;i class="fa-regular fa-circle text-[10px] mr-1 text-blue-400"&gt;&lt;/i&gt;백&lt;/span&gt;`;
+                    return `&lt;div class="flex justify-between items-center py-1 px-2 rounded hover:bg-slate-700/50"&gt;
+                        &lt;span class="text-slate-400"&gt;#${idx + 1}&lt;/span&gt;
+                        &lt;div&gt;${playerTag}&lt;/div&gt;
+                        &lt;span class="text-slate-200 font-bold"&gt;${colName}${rowName}&lt;/span&gt;
+                    &lt;/div&gt;`;
+                }).reverse().join('');
+            }
+        }
+
+        checkWin(r, c, color) {
+            const directions = [
+                [[0, 1], [0, -1]],   // Horizontal
+                [[1, 0], [-1, 0]],   // Vertical
+                [[1, 1], [-1, -1]],  // Diagonal \
+                [[1, -1], [-1, 1]]   // Diagonal /
+            ];
+
+            for (let dir of directions) {
+                let line = [{ r, c }];
+                for (let [dr, dc] of dir) {
+                    let nr = r + dr;
+                    let nc = c + dc;
+                    while (nr &gt;= 0 &amp;&amp; nr &lt; BOARD_SIZE &amp;&amp; nc &gt;= 0 &amp;&amp; nc &lt; BOARD_SIZE &amp;&amp; this.board[nr][nc] === color) {
+                        line.push({ r: nr, c: nc });
+                        nr += dr;
+                        nc += dc;
+                    }
+                }
+
+                if (line.length &gt;= 5) {
+                    // Sort line by coordinates for nice rendering
+                    line.sort((a, b) =&gt; a.r !== b.r ? a.r - b.r : a.c - b.c);
+                    return { isWin: true, line };
+                }
+            }
+
+            return { isWin: false, line: [] };
+        }
+
+        triggerAiMove() {
+            if (this.gameOver) return;
+
+            const bestMove = this.getBestMove();
+            if (bestMove) {
+                this.makeMove(bestMove.r, bestMove.c, WHITE);
+                if (!this.gameOver) {
+                    this.currentPlayer = BLACK;
+                    this.updateUI();
+                }
+            }
+        }
+
+        getBestMove() {
+            // First turn check - if player placed center, put nearby
+            if (this.history.length === 1) {
+                const first = this.history[0];
+                const offsets = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
+                const validOffsets = offsets.filter(([dr, dc]) =&gt; {
+                    const nr = first.r + dr, nc = first.c + dc;
+                    return nr &gt;= 0 &amp;&amp; nr &lt; BOARD_SIZE &amp;&amp; nc &gt;= 0 &amp;&amp; nc &lt; BOARD_SIZE;
+                });
+                const chosen = validOffsets[Math.floor(Math.random() * validOffsets.length)];
+                return { r: first.r + chosen[0], c: first.c + chosen[1] };
+            }
+
+            // Difficulty depth scaling
+            let depth = 2;
+            if (this.difficulty === 'easy') depth = 1;
+            if (this.difficulty === 'normal') depth = 2;
+            if (this.difficulty === 'hard') depth = 3;
+
+            // Candidate moves (adjacent to existing stones within range 2)
+            const candidates = this.getCandidateMoves();
+
+            if (candidates.length === 0) {
+                return { r: Math.floor(BOARD_SIZE / 2), c: Math.floor(BOARD_SIZE / 2) };
+            }
+
+            // Quick Win / Immediate Block Check
+            for (let move of candidates) {
+                // Check if AI can win immediately
+                this.board[move.r][move.c] = WHITE;
+                if (this.checkWin(move.r, move.c, WHITE).isWin) {
+                    this.board[move.r][move.c] = EMPTY;
+                    return move;
+                }
+                this.board[move.r][move.c] = EMPTY;
+            }
+
+            for (let move of candidates) {
+                // Check if Player will win on next turn (Immediate Block)
+                this.board[move.r][move.c] = BLACK;
+                if (this.checkWin(move.r, move.c, BLACK).isWin) {
+                    this.board[move.r][move.c] = EMPTY;
+                    return move;
+                }
+                this.board[move.r][move.c] = EMPTY;
+            }
+
+            // Minimax with Alpha-Beta Pruning
+            let bestScore = -Infinity;
+            let bestMoves = [];
+
+            for (let move of candidates) {
+                this.board[move.r][move.c] = WHITE;
+                let score = this.minimax(depth - 1, false, -Infinity, Infinity);
+                this.board[move.r][move.c] = EMPTY;
+
+                if (score &gt; bestScore) {
+                    bestScore = score;
+                    bestMoves = [move];
+                } else if (score === bestScore) {
+                    bestMoves.push(move);
+                }
+            }
+
+            return bestMoves[Math.floor(Math.random() * bestMoves.length)];
+        }
+
+        getCandidateMoves() {
+            const candidateMap = new Array(BOARD_SIZE).fill(0).map(() =&gt; new Array(BOARD_SIZE).fill(false));
+            const candidates = [];
+
+            for (let r = 0; r &lt; BOARD_SIZE; r++) {
+                for (let c = 0; c &lt; BOARD_SIZE; c++) {
+                    if (this.board[r][c] !== EMPTY) {
+                        // Search 2-cell radius around placed stones
+                        for (let dr = -2; dr &lt;= 2; dr++) {
+                            for (let dc = -2; dc &lt;= 2; dc++) {
+                                const nr = r + dr;
+                                const nc = c + dc;
+                                if (nr &gt;= 0 &amp;&amp; nr &lt; BOARD_SIZE &amp;&amp; nc &gt;= 0 &amp;&amp; nc &lt; BOARD_SIZE &amp;&amp; this.board[nr][nc] === EMPTY) {
+                                    if (!candidateMap[nr][nc]) {
+                                        candidateMap[nr][nc] = true;
+                                        candidates.push({ r: nr, c: nc });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Sort candidates based on simple heuristic for better Alpha-Beta pruning
+            candidates.forEach(move =&gt; {
+                move.score = this.evaluatePoint(move.r, move.c, WHITE) + this.evaluatePoint(move.r, move.c, BLACK);
+            });
+            candidates.sort((a, b) =&gt; b.score - a.score);
+
+            return candidates.slice(0, 20); // Top 20 moves
+        }
+
+        minimax(depth, isMaximizing, alpha, beta) {
+            if (depth === 0) {
+                return this.evaluateBoard();
+            }
+
+            const candidates = this.getCandidateMoves();
+            if (candidates.length === 0) return 0;
+
+            if (isMaximizing) {
+                let maxEval = -Infinity;
+                for (let move of candidates) {
+                    this.board[move.r][move.c] = WHITE;
+                    if (this.checkWin(move.r, move.c, WHITE).isWin) {
+                        this.board[move.r][move.c] = EMPTY;
+                        return 100000;
+                    }
+                    let evaluation = this.minimax(depth - 1, false, alpha, beta);
+                    this.board[move.r][move.c] = EMPTY;
+
+                    maxEval = Math.max(maxEval, evaluation);
+                    alpha = Math.max(alpha, evaluation);
+                    if (beta &lt;= alpha) break;
+                }
+                return maxEval;
+            } else {
+                let minEval = Infinity;
+                for (let move of candidates) {
+                    this.board[move.r][move.c] = BLACK;
+                    if (this.checkWin(move.r, move.c, BLACK).isWin) {
+                        this.board[move.r][move.c] = EMPTY;
+                        return -100000;
+                    }
+                    let evaluation = this.minimax(depth - 1, true, alpha, beta);
+                    this.board[move.r][move.c] = EMPTY;
+
+                    minEval = Math.min(minEval, evaluation);
+                    beta = Math.min(beta, evaluation);
+                    if (beta &lt;= alpha) break;
+                }
+                return minEval;
+            }
+        }
+
+        evaluateBoard() {
+            let aiScore = 0;
+            let playerScore = 0;
+
+            for (let r = 0; r &lt; BOARD_SIZE; r++) {
+                for (let c = 0; c &lt; BOARD_SIZE; c++) {
+                    if (this.board[r][c] === WHITE) {
+                        aiScore += this.evaluatePoint(r, c, WHITE);
+                    } else if (this.board[r][c] === BLACK) {
+                        playerScore += this.evaluatePoint(r, c, BLACK);
+                    }
+                }
+            }
+
+            return aiScore - playerScore * 1.2; // Slightly defensive bias against player
+        }
+
+        evaluatePoint(r, c, color) {
+            let totalScore = 0;
+            const directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
+
+            for (let [dr, dc] of directions) {
+                let count = 1;
+                let openEnds = 0;
+
+                // Forward
+                let nr = r + dr, nc = c + dc;
+                while (nr &gt;= 0 &amp;&amp; nr &lt; BOARD_SIZE &amp;&amp; nc &gt;= 0 &amp;&amp; nc &lt; BOARD_SIZE &amp;&amp; this.board[nr][nc] === color) {
+                    count++;
+                    nr += dr;
+                    nc += dc;
+                }
+                if (nr &gt;= 0 &amp;&amp; nr &lt; BOARD_SIZE &amp;&amp; nc &gt;= 0 &amp;&amp; nc &lt; BOARD_SIZE &amp;&amp; this.board[nr][nc] === EMPTY) {
+                    openEnds++;
+                }
+
+                // Backward
+                nr = r - dr; nc = c - dc;
+                while (nr &gt;= 0 &amp;&amp; nr &lt; BOARD_SIZE &amp;&amp; nc &gt;= 0 &amp;&amp; nc &lt; BOARD_SIZE &amp;&amp; this.board[nr][nc] === color) {
+                    count++;
+                    nr -= dr;
+                    nc -= dc;
+                }
+                if (nr &gt;= 0 &amp;&amp; nr &lt; BOARD_SIZE &amp;&amp; nc &gt;= 0 &amp;&amp; nc &lt; BOARD_SIZE &amp;&amp; this.board[nr][nc] === EMPTY) {
+                    openEnds++;
+                }
+
+                // Pattern Weighting
+                if (count &gt;= 5) totalScore += 100000;
+                else if (count === 4 &amp;&amp; openEnds === 2) totalScore += 10000;
+                else if (count === 4 &amp;&amp; openEnds === 1) totalScore += 1000;
+                else if (count === 3 &amp;&amp; openEnds === 2) totalScore += 1000;
+                else if (count === 3 &amp;&amp; openEnds === 1) totalScore += 100;
+                else if (count === 2 &amp;&amp; openEnds === 2) totalScore += 100;
+                else if (count === 2 &amp;&amp; openEnds === 1) totalScore += 10;
+            }
+
+            return totalScore;
+        }
+
+        // Modal Display Helper
+        showModal(title, message, iconType) {
+            const modal = document.getElementById('gameModal');
+            const modalContent = document.getElementById('modalContent');
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalMessage').textContent = message;
+
+            const icon = document.getElementById('modalIcon');
+            if (iconType === 'trophy') icon.className = "fa-solid fa-trophy text-3xl text-amber-400";
+            else if (iconType === 'robot') icon.className = "fa-solid fa-robot text-3xl text-red-400";
+            else icon.className = "fa-solid fa-handshake text-3xl text-slate-400";
+
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modalContent.classList.remove('scale-95');
+            modalContent.classList.add('scale-100');
+        }
+
+        hideModal() {
+            const modal = document.getElementById('gameModal');
+            const modalContent = document.getElementById('modalContent');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            modalContent.classList.remove('scale-100');
+            modalContent.classList.add('scale-95');
+        }
+    }
+
+    // Initialize Game on window load
+    window.onload = () =&gt; {
+        const game = new GomokuGame();
+    };
+&lt;/script&gt;
+</code></pre>
+</body>
+</style></head></html><div style="break-before: page; page-break-before: always;"></div>
+<h1 id="지뢰찾기-게임"><a href="#지뢰찾기-게임" class="header">지뢰찾기 게임</a></h1>
+
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>클래식 지뢰찾기 (Minesweeper)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=VT323&amp;family=Noto+Sans+KR:wght@400;600;800&amp;display=swap" rel="stylesheet">
+<pre><code>&lt;style&gt;
+    body {
+        font-family: 'Noto Sans KR', sans-serif;
+        touch-action: manipulation;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+    
+    .digital-font {
+        font-family: 'VT323', monospace;
+    }
+
+    /* 셀 및 보드 그리드 스타일 */
+    .cell {
+        aspect-ratio: 1 / 1;
+        transition: all 0.05s ease-in-out;
+    }
+
+    .cell-unrevealed {
+        background: linear-gradient(135deg, #f0f0f0 0%, #d4d4d8 100%);
+        box-shadow: inset 2px 2px 0px #ffffff, inset -2px -2px 0px #a1a1aa;
+    }
+
+    .cell-unrevealed:hover {
+        background: linear-gradient(135deg, #ffffff 0%, #e4e4e7 100%);
+    }
+
+    .cell-revealed {
+        background-color: #e4e4e7;
+        box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    /* 숫자별 색상 지정 */
+    .num-1 { color: #2563eb; font-weight: 800; }
+    .num-2 { color: #16a34a; font-weight: 800; }
+    .num-3 { color: #dc2626; font-weight: 800; }
+    .num-4 { color: #7c3aed; font-weight: 800; }
+    .num-5 { color: #991b1b; font-weight: 800; }
+    .num-6 { color: #0891b2; font-weight: 800; }
+    .num-7 { color: #1e293b; font-weight: 800; }
+    .num-8 { color: #475569; font-weight: 800; }
+
+    /* 애니메이션 효과 */
+    @keyframes pop {
+        0% { transform: scale(0.8); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+
+    .animate-pop {
+        animation: pop 0.15s ease-out forwards;
+    }
+
+    @keyframes explode {
+        0% { transform: scale(1); background-color: #ef4444; }
+        50% { transform: scale(1.2); background-color: #dc2626; }
+        100% { transform: scale(1); background-color: #b91c1c; }
+    }
+
+    .animate-explode {
+        animation: explode 0.3s ease-out forwards;
+    }
+
+    /* 스크롤바 맞춤 설정 */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #a1a1aa;
+        border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #71717a;
+    }
+&lt;/style&gt;
+</code></pre>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col items-center justify-between p-2 sm:p-4">
+<pre><code>&lt;!-- 메인 컨테이너 --&gt;
+&lt;div class="w-full max-w-4xl flex flex-col items-center my-auto"&gt;
+    &lt;!-- 타이틀 및 컨트롤 상단 바 --&gt;
+    &lt;header class="w-full text-center mb-3 sm:mb-4"&gt;
+        &lt;h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight text-amber-400 drop-shadow-md flex items-center justify-center gap-2"&gt;
+            💣 지뢰찾기 &lt;span class="text-xs sm:text-sm bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded border border-amber-500/40 font-normal"&gt;Retro Edition&lt;/span&gt;
+        &lt;/h1&gt;
+    &lt;/header&gt;
+
+    &lt;!-- 난이도 선택 버튼 및 깃발 모드 토글 --&gt;
+    &lt;div class="w-full max-w-md bg-slate-800 p-2 sm:p-3 rounded-xl shadow-lg border border-slate-700 mb-3 flex flex-wrap gap-2 justify-between items-center"&gt;
+        &lt;div class="flex gap-1 sm:gap-2 justify-center flex-1"&gt;
+            &lt;button onclick="setDifficulty('easy')" id="btn-easy" class="px-2.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-indigo-600 text-white shadow hover:bg-indigo-500 transition"&gt;초급&lt;/button&gt;
+            &lt;button onclick="setDifficulty('medium')" id="btn-medium" class="px-2.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition"&gt;중급&lt;/button&gt;
+            &lt;button onclick="setDifficulty('hard')" id="btn-hard" class="px-2.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition"&gt;상급&lt;/button&gt;
+            &lt;button onclick="openCustomModal()" id="btn-custom" class="px-2.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition"&gt;사용자 지정&lt;/button&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;!-- 모바일용 터치 모드 토글 및 최고기록 확인 --&gt;
+    &lt;div class="w-full max-w-md flex justify-between items-center px-1 mb-2"&gt;
+        &lt;button id="flag-mode-btn" onclick="toggleFlagMode()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-xs sm:text-sm font-medium hover:bg-slate-700 transition"&gt;
+            &lt;span id="flag-mode-icon"&gt;🚩&lt;/span&gt;
+            &lt;span&gt;모드: &lt;strong id="flag-mode-text" class="text-indigo-400"&gt;열기&lt;/strong&gt;&lt;/span&gt;
+        &lt;/button&gt;
+        &lt;button onclick="openScoresModal()" class="flex items-center gap-1 text-xs sm:text-sm text-slate-400 hover:text-amber-300 transition"&gt;
+            🏆 최고 기록
+        &lt;/button&gt;
+    &lt;/div&gt;
+
+    &lt;!-- 게임판 프레임 --&gt;
+    &lt;div id="game-container" class="bg-slate-800 p-3 sm:p-4 rounded-2xl shadow-2xl border-2 border-slate-700 flex flex-col items-center max-w-full"&gt;
+        &lt;!-- 상태 표시 바 (남은 지뢰, 얼굴 버튼, 타이머) --&gt;
+        &lt;div class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-2.5 mb-3 flex justify-between items-center"&gt;
+            &lt;!-- 남은 지뢰 카운터 --&gt;
+            &lt;div class="flex flex-col items-start min-w-[70px]"&gt;
+                &lt;span class="text-[10px] text-slate-400 font-bold tracking-wider"&gt;MINES&lt;/span&gt;
+                &lt;div id="mine-counter" class="digital-font text-2xl sm:text-3xl text-red-500 font-bold bg-black/60 px-2 rounded border border-red-900/50 leading-none"&gt;
+                    010
+                &lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;!-- 얼굴 상태/리셋 버튼 --&gt;
+            &lt;button id="face-btn" onclick="initGame()" class="w-10 h-10 sm:w-12 sm:h-12 text-2xl sm:text-3xl bg-slate-800 hover:bg-slate-700 border-2 border-slate-600 rounded-xl flex items-center justify-center transition transform active:scale-95 shadow-inner"&gt;
+                😊
+            &lt;/button&gt;
+
+            &lt;!-- 경과 시간 타이머 --&gt;
+            &lt;div class="flex flex-col items-end min-w-[70px]"&gt;
+                &lt;span class="text-[10px] text-slate-400 font-bold tracking-wider"&gt;TIME&lt;/span&gt;
+                &lt;div id="timer" class="digital-font text-2xl sm:text-3xl text-red-500 font-bold bg-black/60 px-2 rounded border border-red-900/50 leading-none"&gt;
+                    000
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;!-- 게임 셀 그리드 영역 --&gt;
+        &lt;div id="board-wrapper" class="overflow-auto max-w-full max-h-[60vh] custom-scrollbar p-1 rounded-lg border border-slate-700/50 bg-slate-950"&gt;
+            &lt;div id="board" class="grid gap-1 bg-slate-950 p-1 rounded"&gt;&lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- 하단 크레딧 --&gt;
+&lt;footer class="mt-4 text-xs text-slate-500 text-center"&gt;
+    지뢰찾기 HTML5 • 좌클릭: 열기, 우클릭/긴누르기: 깃발
+&lt;/footer&gt;
+
+&lt;!-- 사용자 지정 난이도 모달 --&gt;
+&lt;div id="custom-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50"&gt;
+    &lt;div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 max-w-xs w-full shadow-2xl"&gt;
+        &lt;h3 class="text-lg font-bold text-amber-400 mb-4 flex items-center gap-2"&gt;⚙️ 사용자 지정 설정&lt;/h3&gt;
+        &lt;div class="space-y-3 text-sm"&gt;
+            &lt;div&gt;
+                &lt;label class="block text-slate-300 text-xs mb-1"&gt;가로 크기 (9 ~ 30)&lt;/label&gt;
+                &lt;input type="number" id="custom-width" min="9" max="30" value="10" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-white focus:outline-none focus:border-indigo-500"&gt;
+            &lt;/div&gt;
+            &lt;div&gt;
+                &lt;label class="block text-slate-300 text-xs mb-1"&gt;세로 크기 (9 ~ 24)&lt;/label&gt;
+                &lt;input type="number" id="custom-height" min="9" max="24" value="10" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-white focus:outline-none focus:border-indigo-500"&gt;
+            &lt;/div&gt;
+            &lt;div&gt;
+                &lt;label class="block text-slate-300 text-xs mb-1"&gt;지뢰 개수 (1 ~ 최대)&lt;/label&gt;
+                &lt;input type="number" id="custom-mines" min="1" max="300" value="15" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-white focus:outline-none focus:border-indigo-500"&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class="flex gap-2 mt-5"&gt;
+            &lt;button onclick="closeCustomModal()" class="flex-1 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-semibold"&gt;취소&lt;/button&gt;
+            &lt;button onclick="applyCustomSettings()" class="flex-1 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-xs font-semibold text-white"&gt;확인&lt;/button&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- 최고 기록 모달 --&gt;
+&lt;div id="scores-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50"&gt;
+    &lt;div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 max-w-xs w-full shadow-2xl"&gt;
+        &lt;h3 class="text-lg font-bold text-amber-400 mb-3 flex items-center gap-2"&gt;🏆 최고 기록 (최단 시간)&lt;/h3&gt;
+        &lt;div class="space-y-2 text-sm my-4"&gt;
+            &lt;div class="flex justify-between items-center p-2 rounded bg-slate-900/50"&gt;
+                &lt;span class="text-slate-400"&gt;🌱 초급&lt;/span&gt;
+                &lt;span id="score-easy" class="font-bold text-amber-300 digital-font text-xl"&gt;-&lt;/span&gt;
+            &lt;/div&gt;
+            &lt;div class="flex justify-between items-center p-2 rounded bg-slate-900/50"&gt;
+                &lt;span class="text-slate-400"&gt;🌿 중급&lt;/span&gt;
+                &lt;span id="score-medium" class="font-bold text-amber-300 digital-font text-xl"&gt;-&lt;/span&gt;
+            &lt;/div&gt;
+            &lt;div class="flex justify-between items-center p-2 rounded bg-slate-900/50"&gt;
+                &lt;span class="text-slate-400"&gt;🔥 상급&lt;/span&gt;
+                &lt;span id="score-hard" class="font-bold text-amber-300 digital-font text-xl"&gt;-&lt;/span&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;button onclick="closeScoresModal()" class="w-full py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-semibold"&gt;닫기&lt;/button&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+    // Web Audio API 기반 효과음 생성기 (외부 소스 의존 없음)
+    class SoundEffects {
+        constructor() {
+            this.ctx = null;
+        }
+
+        init() {
+            if (!this.ctx) {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        playClick() {
+            if (!this.ctx) return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(200, this.ctx.currentTime + 0.05);
+            gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.05);
+        }
+
+        playFlag() {
+            if (!this.ctx) return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.08);
+            gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.08);
+        }
+
+        playExplosion() {
+            if (!this.ctx) return;
+            // 노이즈 버퍼 생성으로 폭발음 연출
+            const bufferSize = this.ctx.sampleRate * 0.4;
+            const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i &lt; bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+
+            const noise = this.ctx.createBufferSource();
+            noise.buffer = buffer;
+
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(800, this.ctx.currentTime);
+            filter.frequency.linearRampToValueAtTime(50, this.ctx.currentTime + 0.4);
+
+            const gain = this.ctx.createGain();
+            gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
+
+            noise.connect(filter);
+            filter.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            noise.start();
+        }
+
+        playWin() {
+            if (!this.ctx) return;
+            const notes = [440, 554.37, 659.25, 880]; // A4, C#5, E5, A5 멜로디
+            notes.forEach((freq, index) =&gt; {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime + index * 0.1);
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime + index * 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + index * 0.1 + 0.25);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(this.ctx.currentTime + index * 0.1);
+                osc.stop(this.ctx.currentTime + index * 0.1 + 0.25);
+            });
+        }
+    }
+
+    const sound = new SoundEffects();
+
+    // 게임 환경 설정
+    const DIFFICULTIES = {
+        easy: { width: 9, height: 9, mines: 10 },
+        medium: { width: 16, height: 16, mines: 40 },
+        hard: { width: 30, height: 16, mines: 99 }
+    };
+
+    let currentDifficulty = 'easy';
+    let config = { ...DIFFICULTIES.easy };
+
+    // 게임 상태 상태 변수
+    let board = [];
+    let isFirstClick = true;
+    let isGameOver = false;
+    let isGameWon = false;
+    let remainingMines = 0;
+    let revealedCount = 0;
+    let timer = 0;
+    let timerInterval = null;
+    let flagMode = false; // 터치 기기용 깃발 배치 모드
+
+    // DOM 요소
+    const boardEl = document.getElementById('board');
+    const mineCounterEl = document.getElementById('mine-counter');
+    const timerEl = document.getElementById('timer');
+    const faceBtn = document.getElementById('face-btn');
+
+    // 게임 초기화
+    function initGame() {
+        // 타이머 초기화
+        clearInterval(timerInterval);
+        timerInterval = null;
+        timer = 0;
+        timerEl.textContent = '000';
+
+        isFirstClick = true;
+        isGameOver = false;
+        isGameWon = false;
+        revealedCount = 0;
+        remainingMines = config.mines;
+
+        faceBtn.textContent = '😊';
+        updateMineCounter();
+
+        // 데이터 보드 구조 생성
+        board = Array(config.height).fill(null).map(() =&gt; 
+            Array(config.width).fill(null).map(() =&gt; ({
+                isMine: false,
+                isRevealed: false,
+                isFlagged: false,
+                adjacentMines: 0
+            }))
+        );
+
+        renderBoard();
+    }
+
+    // 지뢰 배치 (첫 번째 클릭된 셀 및 인접 8개 셀 안전 보장)
+    function placeMines(safeR, safeC) {
+        let placed = 0;
+        while (placed &lt; config.mines) {
+            const r = Math.floor(Math.random() * config.height);
+            const c = Math.floor(Math.random() * config.width);
+
+            // 안전구역 (첫 클릭 위치와 인접 8개 구역) 제외
+            const isSafeZone = Math.abs(r - safeR) &lt;= 1 &amp;&amp; Math.abs(c - safeC) &lt;= 1;
+
+            if (!board[r][c].isMine &amp;&amp; !isSafeZone) {
+                board[r][c].isMine = true;
+                placed++;
+            }
+        }
+
+        // 인접 지뢰 수 계산
+        for (let r = 0; r &lt; config.height; r++) {
+            for (let c = 0; c &lt; config.width; c++) {
+                if (!board[r][c].isMine) {
+                    let count = 0;
+                    for (let dr = -1; dr &lt;= 1; dr++) {
+                        for (let dc = -1; dc &lt;= 1; dc++) {
+                            const nr = r + dr;
+                            const nc = c + dc;
+                            if (nr &gt;= 0 &amp;&amp; nr &lt; config.height &amp;&amp; nc &gt;= 0 &amp;&amp; nc &lt; config.width) {
+                                if (board[nr][nc].isMine) count++;
+                            }
+                        }
+                    }
+                    board[r][c].adjacentMines = count;
+                }
+            }
+        }
+    }
+
+    // UI 보드 레이아웃 그리기
+    function renderBoard() {
+        boardEl.innerHTML = '';
+        boardEl.style.gridTemplateColumns = `repeat(${config.width}, minmax(0, 1fr))`;
+
+        // 셀 크기 조절 (상급일수록 작은 셀 크기 적용)
+        let cellSizeClass = 'w-7 h-7 text-sm sm:w-9 sm:h-9 sm:text-base';
+        if (config.width &gt; 20) {
+            cellSizeClass = 'w-6 h-6 text-xs sm:w-7 sm:h-7 sm:text-sm';
+        } else if (config.width &gt; 12) {
+            cellSizeClass = 'w-6 h-6 text-xs sm:w-8 sm:h-8 sm:text-sm';
+        }
+
+        for (let r = 0; r &lt; config.height; r++) {
+            for (let c = 0; c &lt; config.width; c++) {
+                const cellBtn = document.createElement('button');
+                cellBtn.dataset.row = r;
+                cellBtn.dataset.col = c;
+                cellBtn.className = `cell ${cellSizeClass} rounded font-bold flex items-center justify-center select-none cell-unrevealed`;
+
+                // 모바일 길게 누르기(Long Press) 처리용
+                let touchTimer = null;
+
+                cellBtn.addEventListener('mousedown', (e) =&gt; {
+                    sound.init();
+                    if (e.button === 0 &amp;&amp; !flagMode &amp;&amp; !isGameOver &amp;&amp; !board[r][c].isRevealed) {
+                        faceBtn.textContent = '😮';
+                    }
+                });
+
+                cellBtn.addEventListener('mouseup', () =&gt; {
+                    if (!isGameOver &amp;&amp; !isGameWon) faceBtn.textContent = '😊';
+                });
+
+                cellBtn.addEventListener('click', (e) =&gt; {
+                    sound.init();
+                    if (isGameOver || isGameWon) return;
+
+                    if (flagMode) {
+                        handleRightClick(r, c);
+                    } else {
+                        handleLeftClick(r, c);
+                    }
+                });
+
+                // 우클릭 깃발 토글
+                cellBtn.addEventListener('contextmenu', (e) =&gt; {
+                    e.preventDefault();
+                    sound.init();
+                    if (isGameOver || isGameWon) return;
+                    handleRightClick(r, c);
+                });
+
+                // 터치 이벤트 지원 (길게 터치시 깃발)
+                cellBtn.addEventListener('touchstart', (e) =&gt; {
+                    sound.init();
+                    if (isGameOver || isGameWon) return;
+                    touchTimer = setTimeout(() =&gt; {
+                        handleRightClick(r, c);
+                        touchTimer = null;
+                    }, 400);
+                }, { passive: true });
+
+                cellBtn.addEventListener('touchend', () =&gt; {
+                    if (touchTimer) {
+                        clearTimeout(touchTimer);
+                        touchTimer = null;
+                    }
+                });
+
+                boardEl.appendChild(cellBtn);
+            }
+        }
+    }
+
+    // 왼쪽 클릭 (셀 오픈)
+    function handleLeftClick(r, c) {
+        const cell = board[r][c];
+
+        if (cell.isFlagged || cell.isRevealed) return;
+
+        // 첫번째 클릭 처리 (안전지대 보장 및 타이머 시작)
+        if (isFirstClick) {
+            isFirstClick = false;
+            placeMines(r, c);
+            startTimer();
+        }
+
+        // 지뢰 밟음 -&gt; 패배
+        if (cell.isMine) {
+            triggerGameOver(r, c);
+            return;
+        }
+
+        sound.playClick();
+        revealCell(r, c);
+
+        // 승리 체크
+        checkWinCondition();
+    }
+
+    // 재귀적 셀 오픈 (빈 공간 재귀적 탐색 - Flood Fill)
+    function revealCell(r, c) {
+        const cell = board[r][c];
+        if (cell.isRevealed || cell.isFlagged) return;
+
+        cell.isRevealed = true;
+        revealedCount++;
+
+        const el = getCellElement(r, c);
+        el.classList.remove('cell-unrevealed');
+        el.classList.add('cell-revealed', 'animate-pop');
+
+        if (cell.adjacentMines &gt; 0) {
+            el.textContent = cell.adjacentMines;
+            el.classList.add(`num-${cell.adjacentMines}`);
+        } else {
+            // 인접 지뢰가 0개인 경우 주변 8칸 자동 오픈
+            for (let dr = -1; dr &lt;= 1; dr++) {
+                for (let dc = -1; dc &lt;= 1; dc++) {
+                    const nr = r + dr;
+                    const nc = c + dc;
+                    if (nr &gt;= 0 &amp;&amp; nr &lt; config.height &amp;&amp; nc &gt;= 0 &amp;&amp; nc &lt; config.width) {
+                        if (!board[nr][nc].isRevealed) {
+                            revealCell(nr, nc);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // 우클릭 (깃발 토글)
+    function handleRightClick(r, c) {
+        const cell = board[r][c];
+        if (cell.isRevealed) return;
+
+        cell.isFlagged = !cell.isFlagged;
+        const el = getCellElement(r, c);
+
+        if (cell.isFlagged) {
+            remainingMines--;
+            el.textContent = '🚩';
+            sound.playFlag();
+        } else {
+            remainingMines++;
+            el.textContent = '';
+        }
+
+        updateMineCounter();
+    }
+
+    // 게임 오버 처리
+    function triggerGameOver(hitR, hitC) {
+        isGameOver = true;
+        clearInterval(timerInterval);
+        faceBtn.textContent = '😵';
+        sound.playExplosion();
+
+        // 전체 지뢰 공개 및 잘못된 깃발 표시
+        for (let r = 0; r &lt; config.height; r++) {
+            for (let c = 0; c &lt; config.width; c++) {
+                const cell = board[r][c];
+                const el = getCellElement(r, c);
+
+                if (r === hitR &amp;&amp; c === hitC) {
+                    el.textContent = '💥';
+                    el.classList.remove('cell-unrevealed');
+                    el.classList.add('bg-red-600', 'animate-explode');
+                } else if (cell.isMine &amp;&amp; !cell.isFlagged) {
+                    el.textContent = '💣';
+                    el.classList.remove('cell-unrevealed');
+                    el.classList.add('cell-revealed');
+                } else if (!cell.isMine &amp;&amp; cell.isFlagged) {
+                    el.textContent = '❌';
+                    el.classList.remove('cell-unrevealed');
+                    el.classList.add('bg-red-100');
+                }
+            }
+        }
+    }
+
+    // 승리 조건 체크
+    function checkWinCondition() {
+        const totalSafeCells = (config.width * config.height) - config.mines;
+        if (revealedCount === totalSafeCells) {
+            isGameWon = true;
+            clearInterval(timerInterval);
+            faceBtn.textContent = '😎';
+            sound.playWin();
+
+            // 남아있는 지뢰에 자동 깃발 표시
+            for (let r = 0; r &lt; config.height; r++) {
+                for (let c = 0; c &lt; config.width; c++) {
+                    if (board[r][c].isMine) {
+                        board[r][c].isFlagged = true;
+                        const el = getCellElement(r, c);
+                        el.textContent = '🚩';
+                    }
+                }
+            }
+            remainingMines = 0;
+            updateMineCounter();
+
+            // 최고 기록 업데이트 저장
+            saveHighScore(currentDifficulty, timer);
+        }
+    }
+
+    // 헬퍼: 셀 DOM 엘리먼트 가져오기
+    function getCellElement(r, c) {
+        return boardEl.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+    }
+
+    // 지뢰 표시기 업데이트
+    function updateMineCounter() {
+        const formatted = String(Math.max(-99, remainingMines)).padStart(3, '0');
+        mineCounterEl.textContent = formatted;
+    }
+
+    // 타이머 동작
+    function startTimer() {
+        timerInterval = setInterval(() =&gt; {
+            timer++;
+            if (timer &gt; 999) timer = 999;
+            timerEl.textContent = String(timer).padStart(3, '0');
+        }, 1000);
+    }
+
+    // 난이도 설정 변경
+    function setDifficulty(diff) {
+        currentDifficulty = diff;
+        config = { ...DIFFICULTIES[diff] };
+
+        // 난이도 버튼 UI 업데이트
+        ['easy', 'medium', 'hard', 'custom'].forEach(d =&gt; {
+            const btn = document.getElementById(`btn-${d}`);
+            if (d === diff) {
+                btn.className = "px-2.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-indigo-600 text-white shadow hover:bg-indigo-500 transition";
+            } else {
+                btn.className = "px-2.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition";
+            }
+        });
+
+        initGame();
+    }
+
+    // 터치 기기용 깃발 모드 토글
+    function toggleFlagMode() {
+        flagMode = !flagMode;
+        const btn = document.getElementById('flag-mode-btn');
+        const text = document.getElementById('flag-mode-text');
+        const icon = document.getElementById('flag-mode-icon');
+
+        if (flagMode) {
+            btn.classList.replace('bg-slate-800', 'bg-indigo-900/60');
+            btn.classList.replace('border-slate-700', 'border-indigo-500');
+            text.textContent = '깃발';
+            text.className = 'text-amber-400 font-bold';
+            icon.textContent = '🚩';
+        } else {
+            btn.classList.replace('bg-indigo-900/60', 'bg-slate-800');
+            btn.classList.replace('border-indigo-500', 'border-slate-700');
+            text.textContent = '열기';
+            text.className = 'text-indigo-400 font-bold';
+            icon.textContent = '🔍';
+        }
+    }
+
+    // 사용자 지정 난이도 모달 로직
+    function openCustomModal() {
+        document.getElementById('custom-modal').classList.remove('hidden');
+        document.getElementById('custom-modal').classList.add('flex');
+    }
+
+    function closeCustomModal() {
+        document.getElementById('custom-modal').classList.add('hidden');
+        document.getElementById('custom-modal').classList.remove('flex');
+    }
+
+    function applyCustomSettings() {
+        const w = parseInt(document.getElementById('custom-width').value) || 10;
+        const h = parseInt(document.getElementById('custom-height').value) || 10;
+        let m = parseInt(document.getElementById('custom-mines').value) || 10;
+
+        const clampedW = Math.min(Math.max(w, 9), 30);
+        const clampedH = Math.min(Math.max(h, 9), 24);
+        const maxMines = Math.floor((clampedW * clampedH) * 0.8); // 최대 80% 밀도 제한
+        const clampedMines = Math.min(Math.max(m, 1), maxMines);
+
+        config = { width: clampedW, height: clampedH, mines: clampedMines };
+        currentDifficulty = 'custom';
+
+        ['easy', 'medium', 'hard'].forEach(d =&gt; {
+            document.getElementById(`btn-${d}`).className = "px-2.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition";
+        });
+        document.getElementById('btn-custom').className = "px-2.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-indigo-600 text-white shadow hover:bg-indigo-500 transition";
+
+        closeCustomModal();
+        initGame();
+    }
+
+    // 최고 기록 관리 (LocalStorage)
+    function saveHighScore(diff, time) {
+        if (diff === 'custom') return;
+        const key = `minesweeper_best_${diff}`;
+        const currentBest = localStorage.getItem(key);
+
+        if (!currentBest || time &lt; parseInt(currentBest)) {
+            localStorage.setItem(key, time);
+            setTimeout(() =&gt; {
+                alert(`🎉 축하합니다! ${diff === 'easy' ? '초급' : diff === 'medium' ? '중급' : '상급'} 신기록 달성: ${time}초`);
+            }, 100);
+        }
+    }
+
+    function openScoresModal() {
+        ['easy', 'medium', 'hard'].forEach(d =&gt; {
+            const best = localStorage.getItem(`minesweeper_best_${d}`);
+            document.getElementById(`score-${d}`).textContent = best ? `${best}초` : '기록 없음';
+        });
+        document.getElementById('scores-modal').classList.remove('hidden');
+        document.getElementById('scores-modal').classList.add('flex');
+    }
+
+    function closeScoresModal() {
+        document.getElementById('scores-modal').classList.add('hidden');
+        document.getElementById('scores-modal').classList.remove('flex');
+    }
+
+    // 페이지 로드시 게임 시작
+    window.onload = () =&gt; {
+        initGame();
+    };
+&lt;/script&gt;
+</code></pre>
+</body>
+</html><div style="break-before: page; page-break-before: always;"></div>
 <h1 id="-ѱ-"><a class="header" href="#-ѱ-">���� �ѱ� ����</a></h1>
 <p>�ѱ��� ���� �� �����帮�� �ֽ��ϴ�.</p>
 <p>�̷��� �ѱ� encoding�� ���� ������ �ѱ��� ���� ������.</p>
