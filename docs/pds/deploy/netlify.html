@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>문제 2 - aichamp</title>
+        <title>netlify 배포하기 - aichamp</title>
 
 
         <!-- Custom HTML head -->
@@ -36,10 +36,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-2030c51b.js";
+            window.path_to_searchindex_js = "../../searchindex-c7116f4f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-e77f134c.js"></script>
+        <script src="../../toc-29913abd.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -175,17 +175,55 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="문제-2"><a class="header" href="#문제-2">문제 2</a></h1>
+                        <h1 id="웹서버에-배포"><a class="header" href="#웹서버에-배포">웹서버에 배포</a></h1>
+<p>AI가 만들어 준 index.html 파일은 내 컴퓨터에만 저장되어 있다.</p>
+<p>전 세계 모든 사람들이 이 HTML 파일을 웹브라우저를 통해 보게 하고 싶은데 내 컴퓨터에만 파일이 있으면 다른 사람들은 (보안상의 이유로라도) 이 파일을 열어볼 수가 없다.</p>
+<p>그래서 이 index.html 파일을 <strong>웹서버</strong>에 업로드해서 모든 사람들이 이 index.html 파일에 접근할 수 있도록 해야 한다.</p>
+<h2 id="웹서버"><a class="header" href="#웹서버">웹서버</a></h2>
+<p>웹서버에 업로드하려면 웹서버를 구입하고, 설치, 운영해야 한다.</p>
+<p>상당한 비용과 운영인력까지 필요하다.</p>
+<p>그런데 이런 일들을 깔끔하게 처리해주는 서비스들이 있다.</p>
+<p>대표적인 곳이</p>
+<ul>
+<li><a href="https://www.netlify.com/">netlify</a></li>
+<li><a href="https://vercel.com/">vercel</a></li>
+<li><a href="https://docs.github.com/ko/pages">github pages</a></li>
+<li><a href="https://render.com/">render</a></li>
+<li><a href="https://firebase.google.com">firebase hosting</a></li>
+<li><a href="https://www.cloudflare.com/products/pages/">cloudflare pages</a></li>
+</ul>
+<p>등이다.</p>
+<h2 id="netlify"><a class="header" href="#netlify">netlify</a></h2>
+<p>여기서 우리는 netlify를 이용한 배포를 해 보자.</p>
+<p>테스트는 무료이고 유료 요금도 월 $9, $20 정도이다.</p>
+<h3 id="회원가입-로그인"><a class="header" href="#회원가입-로그인">회원가입, 로그인</a></h3>
+<p><a href="https://netlify.com">https://netlify.com</a>에 접속하고 회원가입, 로그인한다.</p>
+<h3 id="새-프로젝트-생성"><a class="header" href="#새-프로젝트-생성">새 프로젝트 생성</a></h3>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="attachments/20260827100131.png" alt=""><span class="img-wrapper"><img src="attachments/20260827100131.png" alt=""></span></label></p>
+<p>netlify 상단 메뉴에서 dashboard로 이동한다.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="attachments/20260827100230.png" alt=""><span class="img-wrapper"><img src="attachments/20260827100230.png" alt=""></span></label></p>
+<p>Add new projects 버튼을 누른다.</p>
+<h3 id="새-프로젝트에-indexhtml-파일-업로드"><a class="header" href="#새-프로젝트에-indexhtml-파일-업로드">새 프로젝트에 index.html 파일 업로드</a></h3>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="attachments/20260827100504.png" alt=""><span class="img-wrapper"><img src="attachments/20260827100504.png" alt=""></span></label></p>
+<p>index.html 파일을 netlify 웹페이지의 Upload you project files 부분에 끌어다 놓는다. 끝.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="attachments/20260827100724.png" alt=""><span class="img-wrapper"><img src="attachments/20260827100724.png" alt=""></span></label></p>
+<p>이 하나로 웹서버에 업로드하는 게 끝난다. 잠시 후 화면이 아래와 같이 바뀐다.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="attachments/20260827100811.png" alt=""><span class="img-wrapper"><img src="attachments/20260827100811.png" alt=""></span></label></p>
+<p>표시한 부분이 전 세계에서(핸드폰에서도 가능) 접속할 수 있는 url 주소이다.</p>
+<p><a href="https://lively-basbousa-37aa5f.netlify.app/" target="_blank"><img src="attachments/20260827101028.png"></a></p>
+<h3 id="url-변경--project-이름-변경"><a class="header" href="#url-변경--project-이름-변경">url 변경 = project 이름 변경</a></h3>
+<p>url이 복잡한데 url은 project 이름을 따라가도록 되어 있다. 그래서 project 이름을 변경하면 더 짧은 주소로 접근할 수 있게 된다.</p>
+<p>project 이름을 변경하는 방법은, 위 이미지에서 “Project configuration” 버튼을 눌러 안으로 들어간 화면에서 “Change project name“을 누르는 것이다.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../../green/set2/quiz1.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../../pds/htmlpreview.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../../green/set2/quiz3.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../../pds/enc_error.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -195,11 +233,11 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../../green/set2/quiz1.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../../pds/htmlpreview.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../../green/set2/quiz3.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../../pds/enc_error.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>
